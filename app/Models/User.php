@@ -27,6 +27,7 @@ class User extends Authenticatable implements HasMedia
         'name',
         'email',
         'password',
+        'avatar',
         'stripe_account_id',
         'stripe_customer_id',
         'bio',
@@ -78,6 +79,16 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')
@@ -106,7 +117,19 @@ class User extends Authenticatable implements HasMedia
      */
     public function getAvatarUrlAttribute()
     {
-        return $this->getFirstMediaUrl('avatar', 'medium') ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return asset('images/default-avatar.png');
+    }
+
+    public function getAvatarThumbUrlAttribute()
+    {
+        if ($this->avatar) {
+            $path = str_replace('avatars/', 'avatars/thumbnails/', $this->avatar);
+            return asset('storage/' . $path);
+        }
+        return asset('images/default-avatar.png');
     }
 
     /**
