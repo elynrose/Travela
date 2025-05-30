@@ -72,6 +72,22 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Payment Section -->
+                @if($order->payment_status === 'pending')
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Complete Payment</h5>
+                            <form id="payment-form" class="mb-4">
+                                <button id="submit" class="btn btn-primary w-100">
+                                    <span id="button-text">Pay Now</span>
+                                    <span id="spinner" class="spinner d-none"></span>
+                                </button>
+                                <div id="payment-message" class="d-none mt-3"></div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Sidebar -->
@@ -155,6 +171,112 @@
             font-size: 0.875rem;
             padding: 0.5em 0.75em;
         }
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+
+        #payment-element {
+            margin-bottom: 24px;
+        }
+
+        #payment-message {
+            color: rgb(105, 115, 134);
+            font-size: 16px;
+            line-height: 20px;
+            padding-top: 12px;
+            text-align: center;
+        }
+
+        #payment-element .ElementsApp {
+            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            background: white;
+            box-shadow: 0 1px 3px 0 #E6EBF1;
+        }
+
+        #payment-element .ElementsApp:focus-within {
+            box-shadow: 0 1px 3px 0 #CFD7DF;
+        }
+
+        #payment-element .ElementsApp .InputElement {
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+            background: white;
+        }
+
+        #payment-element .ElementsApp .InputElement:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 1px 3px 0 #CFD7DF;
+        }
     </style>
     @endpush
+
+    @if($order->payment_status === 'pending')
+        @push('scripts')
+        <script>
+            document
+                .querySelector("#payment-form")
+                .addEventListener("submit", handleSubmit);
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+                setLoading(true);
+
+                try {
+                    const response = await fetch("{{ route('payment.create-intent', $order) }}", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ order_id: "{{ $order->id }}" })
+                    });
+                    const { url } = await response.json();
+                    
+                    if (url) {
+                        window.location.href = url;
+                    } else {
+                        showMessage("An error occurred. Please try again.");
+                        setLoading(false);
+                    }
+                } catch (error) {
+                    showMessage("An error occurred. Please try again.");
+                    setLoading(false);
+                }
+            }
+
+            function showMessage(messageText) {
+                const messageContainer = document.querySelector("#payment-message");
+                messageContainer.classList.remove("d-none");
+                messageContainer.textContent = messageText;
+
+                setTimeout(function () {
+                    messageContainer.classList.add("d-none");
+                    messageText.textContent = "";
+                }, 4000);
+            }
+
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    document.querySelector("#submit").disabled = true;
+                    document.querySelector("#spinner").classList.remove("d-none");
+                    document.querySelector("#button-text").classList.add("d-none");
+                } else {
+                    document.querySelector("#submit").disabled = false;
+                    document.querySelector("#spinner").classList.add("d-none");
+                    document.querySelector("#button-text").classList.remove("d-none");
+                }
+            }
+        </script>
+        @endpush
+    @endif
 </x-app-layout> 

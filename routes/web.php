@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', function () {
     $featuredItineraries = \App\Models\Itinerary::with(['user', 'categories'])
@@ -66,7 +67,14 @@ Route::middleware(['auth'])->group(function () {
     // Chat routes
     Route::get('/itineraries/{itinerary}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/itineraries/{itinerary}/messages', [ChatController::class, 'sendMessage'])->name('chat.send');
+
+    // Payment routes
+    Route::post('/payment/create-intent/{order}', [PaymentController::class, 'createPaymentIntent'])->name('payment.create-intent');
+    Route::post('/payment/success', [PaymentController::class, 'handleSuccessfulPayment'])->name('payment.success');
 });
+
+// Stripe webhook route (no auth middleware)
+Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook'])->name('stripe.webhook');
 
 // Public routes
 Route::get('itineraries', [\App\Http\Controllers\ItineraryController::class, 'index'])->name('itineraries.index');

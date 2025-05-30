@@ -105,14 +105,22 @@
                     <div class="card-footer bg-white border-top-0">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <img src="{{ $itinerary->user->profile_photo_url }}" alt="{{ $itinerary->user->name }}" class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                                @if($itinerary->user->getFirstMedia('avatar'))
+                                    <img src="{{ $itinerary->user->getAvatarThumbUrlAttribute() }}" alt="{{ $itinerary->user->name }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                @else
+                                    <div class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-light" style="width: 32px; height: 32px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person text-muted" viewBox="0 0 16 16">
+                                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                        </svg>
+                                    </div>
+                                @endif
                                 <div>
                                     <div class="small fw-bold">{{ $itinerary->user->name }}</div>
                                     <div class="small text-muted">{{ $itinerary->created_at->diffForHumans() }}</div>
                                 </div>
                             </div>
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar3 me-1"></i>{{ $itinerary->duration_days }} days
+                                <i class="bi bi-calendar3 me-1"></i>{{ $itinerary->days->count() }} {{ Str::plural('day', $itinerary->days->count()) }}
                             </span>
                         </div>
                     </div>
