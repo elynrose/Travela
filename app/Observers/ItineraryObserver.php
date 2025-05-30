@@ -46,9 +46,6 @@ class ItineraryObserver
         if ($itinerary->cover_image) {
             Storage::disk('public')->delete($itinerary->cover_image);
         }
-
-        // Delete associated media files
-        $itinerary->clearMediaCollection('gallery');
     }
 
     /**
@@ -68,8 +65,5 @@ class ItineraryObserver
         if ($itinerary->cover_image) {
             Storage::disk('public')->delete($itinerary->cover_image);
         }
-
-        // Delete associated media files
-        $itinerary->clearMediaCollection('gallery');
     }
 } 

@@ -20,7 +20,6 @@ class ItineraryController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth')->except(['index', 'show']);
         $this->imageManager = new ImageManager(new Driver());
     }
 
@@ -81,128 +80,202 @@ class ItineraryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'location' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-            'duration_days' => 'required|integer|min:1',
-            'accommodation' => 'required|string|max:255',
-            'accommodation_address' => 'nullable|string|max:255',
-            'highlights' => 'required|array',
-            'highlights.*' => 'required|string',
-            'included_items' => 'required|array',
-            'included_items.*' => 'required|string',
-            'excluded_items' => 'required|array',
-            'excluded_items.*' => 'required|string',
-            'requirements' => 'required|array',
-            'requirements.*' => 'required|string',
-            'itinerary_days' => 'required|array',
-            'itinerary_days.*.accommodation' => 'required|string',
-            'itinerary_days.*.meals.breakfast' => 'nullable|string',
-            'itinerary_days.*.meals.lunch' => 'nullable|string',
-            'itinerary_days.*.meals.dinner' => 'nullable|string',
-            'itinerary_days.*.activities' => 'required|array',
-            'itinerary_days.*.activities.*' => 'required|string',
-            'itinerary_days.*.notes' => 'nullable|string',
-            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'categories' => 'required|array',
-            'categories.*' => 'exists:categories,id',
+        \Log::info('Starting itinerary creation', [
+            'has_file' => $request->hasFile('cover_image'),
+            'all_data' => $request->all(),
+            'user_id' => auth()->id(),
+            'has_csrf' => $request->hasHeader('X-CSRF-TOKEN'),
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'files' => $request->allFiles(),
+            'headers' => $request->headers->all()
         ]);
 
-        $validated['user_id'] = auth()->id();
-        $validated['slug'] = Str::slug($validated['title']);
-        $validated['is_published'] = false;
-        $validated['is_featured'] = false;
+        try {
+            \Log::info('Starting validation');
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|numeric|min:0',
+                'location' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'duration_days' => 'required|integer|min:1',
+                'accommodation' => 'required|string|max:255',
+                'accommodation_address' => 'nullable|string|max:255',
+                'highlights' => 'required|array|min:1',
+                'highlights.*' => 'required|string|max:255',
+                'included_items' => 'required|array|min:1',
+                'included_items.*' => 'required|string|max:255',
+                'excluded_items' => 'required|array|min:1',
+                'excluded_items.*' => 'required|string|max:255',
+                'requirements' => 'required|array|min:1',
+                'requirements.*' => 'required|string|max:255',
+                'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'categories' => 'required|array',
+                'categories.*' => 'exists:categories,id',
+            ]);
 
-        // Remove cover_image and gallery from $validated so they're not mass-assigned
-        $coverImage = $request->file('cover_image');
-        unset($validated['cover_image']);
-        $galleryImages = $request->file('gallery');
-        unset($validated['gallery']);
+            \Log::info('Validation passed', [
+                'validated_data' => $validated,
+                'has_cover_image' => isset($validated['cover_image']),
+                'has_gallery' => isset($validated['gallery']),
+                'has_categories' => isset($validated['categories']),
+            ]);
 
-        $itinerary = Itinerary::create($validated);
+            \Log::info('Starting database transaction');
+            DB::beginTransaction();
 
-        // Attach categories
-        $itinerary->categories()->attach($request->input('categories'));
+            $validated['user_id'] = auth()->id();
+            $validated['slug'] = Str::slug($validated['title']) . '-' . time();
+            $validated['is_published'] = $request->has('is_published') ? true : false;
+            $validated['is_featured'] = false;
 
-        // Handle cover image upload
-        if ($coverImage) {
-            try {
-                $filename = time() . '_' . $coverImage->getClientOriginalName();
-                
-                \Log::info('Processing cover image upload in store', [
-                    'original_name' => $coverImage->getClientOriginalName(),
-                    'mime_type' => $coverImage->getMimeType(),
-                    'size' => $coverImage->getSize()
+            \Log::info('Prepared data for creation', [
+                'data' => $validated,
+                'user_id' => $validated['user_id'],
+                'slug' => $validated['slug']
+            ]);
+
+            // Handle cover image upload
+            if ($request->hasFile('cover_image')) {
+                \Log::info('Processing cover image upload', [
+                    'original_name' => $request->file('cover_image')->getClientOriginalName(),
+                    'mime_type' => $request->file('cover_image')->getMimeType(),
+                    'size' => $request->file('cover_image')->getSize(),
+                    'is_valid' => $request->file('cover_image')->isValid()
                 ]);
+
+                $file = $request->file('cover_image');
+                $filename = time() . '_' . $file->getClientOriginalName();
                 
-                // Create image instance using the image manager
-                $image = $this->imageManager->read($coverImage);
-                
-                // Save original image
-                $originalPath = 'covers/' . $filename;
-                $originalFullPath = storage_path('app/public/' . $originalPath);
-                
-                \Log::info('Saving original image', [
-                    'path' => $originalFullPath
-                ]);
-                
-                // Ensure directory exists
-                if (!file_exists(dirname($originalFullPath))) {
-                    mkdir(dirname($originalFullPath), 0755, true);
+                try {
+                    \Log::info('Creating image manager instance');
+                    $image = $this->imageManager->read($file);
+                    
+                    // Save original image
+                    $originalPath = 'covers/' . $filename;
+                    $originalFullPath = storage_path('app/public/' . $originalPath);
+                    
+                    \Log::info('Preparing to save original image', [
+                        'path' => $originalFullPath,
+                        'directory_exists' => file_exists(dirname($originalFullPath))
+                    ]);
+                    
+                    // Ensure directory exists
+                    if (!file_exists(dirname($originalFullPath))) {
+                        \Log::info('Creating directory for original image');
+                        mkdir(dirname($originalFullPath), 0755, true);
+                    }
+                    
+                    \Log::info('Saving original image');
+                    $image->save($originalFullPath);
+                    
+                    // Create and save thumbnail
+                    $thumbPath = 'covers/thumbnails/' . $filename;
+                    $thumbFullPath = storage_path('app/public/' . $thumbPath);
+                    
+                    \Log::info('Preparing to save thumbnail', [
+                        'path' => $thumbFullPath,
+                        'directory_exists' => file_exists(dirname($thumbFullPath))
+                    ]);
+                    
+                    // Ensure thumbnail directory exists
+                    if (!file_exists(dirname($thumbFullPath))) {
+                        \Log::info('Creating directory for thumbnail');
+                        mkdir(dirname($thumbFullPath), 0755, true);
+                    }
+                    
+                    \Log::info('Saving thumbnail');
+                    $image->cover(800, 400)->save($thumbFullPath);
+
+                    // Update the cover_image field in the database
+                    $validated['cover_image'] = $originalPath;
+
+                    \Log::info('Cover image saved successfully', [
+                        'original_path' => $originalPath,
+                        'thumb_path' => $thumbPath,
+                        'db_path' => $validated['cover_image'],
+                        'file_exists' => file_exists($originalFullPath)
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Error processing image', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'file_info' => [
+                            'name' => $file->getClientOriginalName(),
+                            'size' => $file->getSize(),
+                            'mime' => $file->getMimeType()
+                        ]
+                    ]);
+                    throw $e;
                 }
-                
-                // Save the image
-                $image->save($originalFullPath);
-                
-                // Create and save thumbnail
-                $thumbPath = 'covers/thumbnails/' . $filename;
-                $thumbFullPath = storage_path('app/public/' . $thumbPath);
-                
-                \Log::info('Saving thumbnail', [
-                    'path' => $thumbFullPath
-                ]);
-                
-                // Ensure thumbnail directory exists
-                if (!file_exists(dirname($thumbFullPath))) {
-                    mkdir(dirname($thumbFullPath), 0755, true);
+            }
+
+            \Log::info('Creating itinerary record', ['data' => $validated]);
+            $itinerary = Itinerary::create($validated);
+            \Log::info('Itinerary created', ['itinerary_id' => $itinerary->id]);
+
+            \Log::info('Attaching categories', ['categories' => $request->input('categories')]);
+            $itinerary->categories()->attach($request->input('categories'));
+            \Log::info('Categories attached successfully');
+
+            // Handle gallery uploads
+            if ($request->hasFile('gallery')) {
+                \Log::info('Processing gallery uploads', ['count' => count($request->file('gallery'))]);
+                $gallery = [];
+                foreach ($request->file('gallery') as $image) {
+                    \Log::info('Processing gallery image', [
+                        'name' => $image->getClientOriginalName(),
+                        'size' => $image->getSize(),
+                        'mime' => $image->getMimeType()
+                    ]);
+                    $filename = time() . '_' . $image->getClientOriginalName();
+                    $path = $image->store('gallery', 'public');
+                    $gallery[] = $path;
+                    \Log::info('Gallery image saved', ['path' => $path]);
                 }
-                
-                // Create and save the thumbnail
-                $image->cover(800, 400)->save($thumbFullPath);
-
-                // Update the cover_image field in the database
-                $itinerary->update(['cover_image' => $originalPath]);
-
-                \Log::info('Cover image saved successfully', [
-                    'original_path' => $originalPath,
-                    'thumb_path' => $thumbPath,
-                    'db_path' => $originalPath
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('Error processing image in store', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                throw $e;
+                \Log::info('Updating itinerary with gallery', ['gallery' => $gallery]);
+                $itinerary->update(['gallery' => $gallery]);
             }
-        }
 
-        // Handle gallery uploads
-        if ($galleryImages) {
-            foreach ($galleryImages as $image) {
-                $filename = time() . '_' . $image->getClientOriginalName();
-                $path = $image->store('gallery', 'public');
-                $gallery[] = $path;
+            \Log::info('Committing transaction');
+            DB::commit();
+
+            // If user wants to publish, check if there are days
+            if ($validated['is_published']) {
+                if ($itinerary->days()->count() < 1) {
+                    // Unpublish and redirect to add days
+                    $itinerary->update(['is_published' => false]);
+                    return redirect()->route('itineraries.editDays', $itinerary)
+                        ->with('error', 'You must add at least one day before publishing.');
+                }
             }
-            $itinerary->update(['gallery' => $gallery]);
-        }
 
-        return redirect()->route('itineraries.show', $itinerary)
-            ->with('success', 'Itinerary created successfully.');
+            \Log::info('Itinerary created successfully', [
+                'itinerary_id' => $itinerary->id,
+                'cover_image' => $itinerary->cover_image,
+                'has_gallery' => !empty($itinerary->gallery)
+            ]);
+
+            return redirect()->route('itineraries.show', $itinerary)
+                ->with('success', 'Itinerary created successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Itinerary creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'validation_errors' => $request->validator ? $request->validator->errors()->toArray() : null,
+                'file_uploads' => [
+                    'has_cover' => $request->hasFile('cover_image'),
+                    'has_gallery' => $request->hasFile('gallery'),
+                    'cover_valid' => $request->hasFile('cover_image') ? $request->file('cover_image')->isValid() : false
+                ]
+            ]);
+            DB::rollBack();
+            return back()->withInput()
+                ->withErrors(['error' => 'Failed to create itinerary: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -620,6 +693,25 @@ class ItineraryController extends Controller
                 }
             }
 
+            // Handle gallery uploads
+            if ($request->hasFile('gallery')) {
+                \Log::info('Processing gallery uploads in update', ['count' => count($request->file('gallery'))]);
+                $gallery = $itinerary->gallery ?? [];
+                foreach ($request->file('gallery') as $image) {
+                    \Log::info('Processing gallery image', [
+                        'name' => $image->getClientOriginalName(),
+                        'size' => $image->getSize(),
+                        'mime' => $image->getMimeType()
+                    ]);
+                    $filename = time() . '_' . $image->getClientOriginalName();
+                    $path = $image->store('gallery', 'public');
+                    $gallery[] = $path;
+                    \Log::info('Gallery image saved', ['path' => $path]);
+                }
+                \Log::info('Updating itinerary with gallery', ['gallery' => $gallery]);
+                $itinerary->update(['gallery' => $gallery]);
+            }
+
             // Update the itinerary
             $itinerary->update($validated);
 
@@ -694,5 +786,51 @@ class ItineraryController extends Controller
         $days = $itinerary->days;
         
         return view('itineraries.day-show', compact('itinerary', 'days'));
+    }
+
+    /**
+     * Display the user's itineraries.
+     */
+    public function myItineraries()
+    {
+        $itineraries = auth()->user()->itineraries()
+            ->with(['categories', 'user'])
+            ->latest()
+            ->paginate(12);
+
+        return view('itineraries.my', compact('itineraries'));
+    }
+
+    /**
+     * Remove a gallery image from the itinerary.
+     */
+    public function deleteGalleryImage(Request $request, Itinerary $itinerary)
+    {
+        // Ensure the user is the owner
+        if (auth()->id() !== $itinerary->user_id) {
+            return redirect()->back()->with('error', 'You are not authorized to delete this image.');
+        }
+
+        $image = $request->query('image');
+        $gallery = $itinerary->gallery ?? [];
+        $key = array_search($image, $gallery);
+        if ($key === false) {
+            return redirect()->back()->with('error', 'Image not found in gallery.');
+        }
+
+        // Remove from array
+        unset($gallery[$key]);
+        $gallery = array_values($gallery);
+
+        // Delete file from storage
+        if (\Storage::disk('public')->exists($image)) {
+            \Storage::disk('public')->delete($image);
+        }
+
+        // Update itinerary
+        $itinerary->gallery = $gallery;
+        $itinerary->save();
+
+        return redirect()->back()->with('success', 'Gallery image deleted successfully.');
     }
 }

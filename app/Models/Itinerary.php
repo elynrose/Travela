@@ -28,6 +28,7 @@ class Itinerary extends Model
         'requirements',
         'is_published',
         'is_featured',
+        'gallery',
         'transportation_type',
         'flight_duration',
         'airfare_min',
@@ -49,6 +50,7 @@ class Itinerary extends Model
         'included_items' => 'array',
         'excluded_items' => 'array',
         'requirements' => 'array',
+        'gallery' => 'array',
         'is_published' => 'boolean',
         'is_featured' => 'boolean',
     ];

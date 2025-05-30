@@ -38,9 +38,6 @@ class UserObserver
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
-
-        // Delete user's media files
-        $user->clearMediaCollection('avatar');
     }
 
     /**
@@ -60,8 +57,5 @@ class UserObserver
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
-
-        // Delete user's media files
-        $user->clearMediaCollection('avatar');
     }
 } 

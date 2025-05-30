@@ -11,6 +11,33 @@ use Illuminate\Support\Str;
 class ItinerarySeeder extends Seeder
 {
     /**
+     * Create a sample image file
+     */
+    protected function createSampleImage(string $path): void
+    {
+        $fullPath = storage_path('app/public/' . $path);
+        $directory = dirname($fullPath);
+        
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+        
+        // Create a simple colored image
+        $image = imagecreatetruecolor(800, 400);
+        $bgColor = imagecolorallocate($image, rand(0, 255), rand(0, 255), rand(0, 255));
+        imagefill($image, 0, 0, $bgColor);
+        
+        // Add some text
+        $textColor = imagecolorallocate($image, 255, 255, 255);
+        $text = basename($path);
+        imagestring($image, 5, 10, 10, $text, $textColor);
+        
+        // Save the image
+        imagejpeg($image, $fullPath, 90);
+        imagedestroy($image);
+    }
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
@@ -25,6 +52,8 @@ class ItinerarySeeder extends Seeder
                 'price' => 899.99,
                 'location' => 'Bali',
                 'country' => 'Indonesia',
+                'accommodation' => 'Luxury Resort & Spa',
+                'accommodation_address' => 'Jl. Pantai Kuta No. 1, Kuta, Bali, Indonesia',
                 'duration_days' => 7,
                 'highlights' => [
                     'Visit ancient temples',
@@ -50,6 +79,12 @@ class ItinerarySeeder extends Seeder
                 ],
                 'is_published' => true,
                 'is_featured' => true,
+                'cover_image' => 'covers/bali-adventure.jpg',
+                'gallery' => [
+                    'gallery/bali-1.jpg',
+                    'gallery/bali-2.jpg',
+                    'gallery/bali-3.jpg',
+                ],
             ],
             [
                 'title' => 'Paris City Break',
@@ -57,6 +92,8 @@ class ItinerarySeeder extends Seeder
                 'price' => 1299.99,
                 'location' => 'Paris',
                 'country' => 'France',
+                'accommodation' => 'Boutique Hotel',
+                'accommodation_address' => '15 Rue de Rivoli, 75004 Paris, France',
                 'duration_days' => 4,
                 'highlights' => [
                     'Eiffel Tower visit',
@@ -82,6 +119,12 @@ class ItinerarySeeder extends Seeder
                 ],
                 'is_published' => true,
                 'is_featured' => true,
+                'cover_image' => 'covers/paris-city.jpg',
+                'gallery' => [
+                    'gallery/paris-1.jpg',
+                    'gallery/paris-2.jpg',
+                    'gallery/paris-3.jpg',
+                ],
             ],
             [
                 'title' => 'Safari Adventure in Tanzania',
@@ -89,6 +132,8 @@ class ItinerarySeeder extends Seeder
                 'price' => 2499.99,
                 'location' => 'Serengeti',
                 'country' => 'Tanzania',
+                'accommodation' => 'Luxury Safari Lodge',
+                'accommodation_address' => 'Serengeti National Park, Tanzania',
                 'duration_days' => 8,
                 'highlights' => [
                     'Serengeti game drives',
@@ -114,18 +159,34 @@ class ItinerarySeeder extends Seeder
                 ],
                 'is_published' => true,
                 'is_featured' => true,
+                'cover_image' => 'covers/safari-adventure.jpg',
+                'gallery' => [
+                    'gallery/safari-1.jpg',
+                    'gallery/safari-2.jpg',
+                    'gallery/safari-3.jpg',
+                ],
             ],
         ];
 
         foreach ($itineraries as $itineraryData) {
+            // Create cover image
+            $this->createSampleImage($itineraryData['cover_image']);
+            
+            // Create gallery images
+            foreach ($itineraryData['gallery'] as $galleryImage) {
+                $this->createSampleImage($galleryImage);
+            }
+
             $itinerary = Itinerary::create([
                 'user_id' => $users->random()->id,
                 'title' => $itineraryData['title'],
-                'slug' => Str::slug($itineraryData['title']),
+                'slug' => Str::slug($itineraryData['title']) . '-' . time(),
                 'description' => $itineraryData['description'],
                 'price' => $itineraryData['price'],
                 'location' => $itineraryData['location'],
                 'country' => $itineraryData['country'],
+                'accommodation' => $itineraryData['accommodation'],
+                'accommodation_address' => $itineraryData['accommodation_address'],
                 'duration_days' => $itineraryData['duration_days'],
                 'highlights' => $itineraryData['highlights'],
                 'included_items' => $itineraryData['included_items'],
@@ -133,6 +194,8 @@ class ItinerarySeeder extends Seeder
                 'requirements' => $itineraryData['requirements'],
                 'is_published' => $itineraryData['is_published'],
                 'is_featured' => $itineraryData['is_featured'],
+                'cover_image' => $itineraryData['cover_image'],
+                'gallery' => $itineraryData['gallery'],
             ]);
 
             // Attach random categories (2-3 per itinerary)

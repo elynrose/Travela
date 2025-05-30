@@ -31,19 +31,23 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard', compact('itineraries', 'orders', 'payouts'));
     })->name('dashboard');
 
-    // Itineraries
-    Route::resource('itineraries', \App\Http\Controllers\ItineraryController::class);
-    Route::post('itineraries/{itinerary}/publish', [\App\Http\Controllers\ItineraryController::class, 'publish'])->name('itineraries.publish');
-    Route::post('itineraries/{itinerary}/unpublish', [\App\Http\Controllers\ItineraryController::class, 'unpublish'])->name('itineraries.unpublish');
-    Route::delete('/itineraries/{itinerary}/gallery/{media}', [\App\Http\Controllers\ItineraryController::class, 'deleteGalleryImage'])
-        ->name('itineraries.gallery.delete')
-        ->middleware(['auth']);
-    Route::get('itineraries/{itinerary}/days/edit', [\App\Http\Controllers\ItineraryController::class, 'editDays'])->name('itineraries.days.edit');
-    Route::put('itineraries/{itinerary}/days', [\App\Http\Controllers\ItineraryController::class, 'updateDays'])->name('itineraries.days.update');
-    Route::delete('days/{day}/photos/{mediaId}', [\App\Http\Controllers\ItineraryController::class, 'deleteDayPhoto'])
-        ->name('days.photos.delete')
-        ->middleware(['auth']);
-    Route::get('itineraries/{itinerary}/days/view', [ItineraryController::class, 'showDays'])->name('itineraries.days.show')->middleware(['auth', 'verified']);
+    // Protected Itinerary Routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/itineraries/create', [ItineraryController::class, 'create'])->name('itineraries.create');
+        Route::post('/itineraries', [ItineraryController::class, 'store'])->name('itineraries.store');
+        Route::get('/itineraries/{itinerary}/edit', [ItineraryController::class, 'edit'])->name('itineraries.edit');
+        Route::put('/itineraries/{itinerary}', [ItineraryController::class, 'update'])->name('itineraries.update');
+        Route::delete('/itineraries/{itinerary}/gallery', [ItineraryController::class, 'deleteGalleryImage'])->name('itineraries.gallery.delete');
+        Route::delete('/itineraries/{itinerary}', [ItineraryController::class, 'destroy'])->name('itineraries.destroy');
+        Route::post('itineraries/{itinerary}/publish', [ItineraryController::class, 'publish'])->name('itineraries.publish');
+        Route::post('itineraries/{itinerary}/unpublish', [ItineraryController::class, 'unpublish'])->name('itineraries.unpublish');
+        Route::get('itineraries/{itinerary}/days/edit', [ItineraryController::class, 'editDays'])->name('itineraries.days.edit');
+        Route::put('itineraries/{itinerary}/days', [ItineraryController::class, 'updateDays'])->name('itineraries.days.update');
+        Route::delete('days/{day}/photos/{mediaId}', [ItineraryController::class, 'deleteDayPhoto'])
+            ->name('days.photos.delete');
+        Route::get('itineraries/{itinerary}/days/view', [ItineraryController::class, 'showDays'])->name('itineraries.days.show');
+        Route::get('/my-itineraries', [ItineraryController::class, 'myItineraries'])->name('itineraries.my');
+    });
 
     // Orders
     Route::resource('orders', \App\Http\Controllers\OrderController::class)->only(['index', 'show', 'store']);

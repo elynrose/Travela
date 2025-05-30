@@ -10,11 +10,60 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            {{-- User Alerts --}}
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <form action="{{ route('itineraries.update', $itinerary) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
                 <div class="row g-4">
+                    <!-- Cover Image Banner -->
+                    <div class="col-12">
+                        <div class="position-relative mb-4">
+                            @if($itinerary->getCoverImageUrl())
+                                <img src="{{ $itinerary->getCoverThumbUrl() }}" 
+                                     alt="Cover image" 
+                                     class="img-fluid w-100" 
+                                     style="max-height: 300px; object-fit: cover;">
+                            @endif
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <label for="cover_image" class="btn btn-light rounded-circle">
+                                    <i class="bi bi-pencil"></i>
+                                </label>
+                                <input type="file" 
+                                       class="d-none" 
+                                       id="cover_image" 
+                                       name="cover_image" 
+                                       accept="image/jpeg,image/png,image/jpg,image/gif">
+                            </div>
+                            @error('cover_image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
                     <!-- Basic Information -->
                     <div class="col-md-8">
                         <div class="mb-4">
@@ -56,27 +105,6 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="cover_image" class="form-label">Cover Image</label>
-                            @if($itinerary->getCoverImageUrl())
-                                <div class="mb-2">
-                                    <img src="{{ $itinerary->getCoverThumbUrl() }}" 
-                                         alt="Current cover image" 
-                                         class="img-thumbnail" 
-                                         style="max-height: 200px;">
-                                </div>
-                            @endif
-                            <input type="file" 
-                                   class="form-control @error('cover_image') is-invalid @enderror" 
-                                   id="cover_image" 
-                                   name="cover_image" 
-                                   accept="image/jpeg,image/png,image/jpg,image/gif">
-                            <div class="form-text">Upload a cover image (max 2MB, JPEG, PNG, or GIF)</div>
-                            @error('cover_image')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
                     </div>
 
@@ -185,7 +213,7 @@
                         <div class="mb-4">
                             <label class="form-label">Requirements</label>
                             <div id="requirements-container">
-                                @foreach(old('requirements', $itinerary->requirements) as $index => $requirement)
+                                @foreach(old('requirements', $itinerary->requirements ?? []) as $index => $requirement)
                                     <div class="input-group mb-2">
                                         <input type="text" class="form-control" 
                                             name="requirements[]" value="{{ $requirement }}" required>
@@ -287,6 +315,58 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Gallery Images Card -->
+                    <div class="col-12">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h3 class="h5 mb-3">Gallery Images</h3>
+                                <div class="mb-3">
+                                    <label for="gallery" class="form-label">Upload Gallery Images</label>
+                                    <input type="file" 
+                                           class="form-control @error('gallery') is-invalid @enderror" 
+                                           id="gallery" 
+                                           name="gallery[]" 
+                                           accept="image/jpeg,image/png,image/jpg,image/gif"
+                                           multiple>
+                                    <div class="form-text">Upload gallery images (max 2MB each, JPEG, PNG, or GIF)</div>
+                                    @error('gallery')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Current Gallery Thumbnails -->
+                                @if($itinerary->gallery)
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Gallery Images</label>
+                                        <div class="row g-2">
+                                            @foreach($itinerary->gallery as $image)
+                                                <div class="col-md-3 position-relative">
+                                                    <img src="{{ asset('storage/' . $image) }}" 
+                                                         alt="Gallery image" 
+                                                         class="img-thumbnail w-100" 
+                                                         style="max-height: 150px; object-fit: cover;">
+                                                    <button type="button" class="btn btn-sm btn-danger delete-gallery-image" data-image="{{ urlencode($image) }}" style="position: absolute; top: 8px; right: 8px;" title="Delete image">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Publish Checkbox -->
+                    <div class="col-12 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $itinerary->is_published) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_published">
+                                Publish this itinerary
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-4">
@@ -298,6 +378,7 @@
     </div>
 
     @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Add highlight
         document.getElementById('add-highlight').addEventListener('click', function() {
@@ -390,6 +471,30 @@
 
             transportationType.addEventListener('change', updateFields);
             updateFields(); // Initial state
+        });
+
+        // Gallery image deletion via AJAX using POST with _method=DELETE
+        $(document).ready(function() {
+            $('.delete-gallery-image').on('click', function() {
+                const image = $(this).data('image');
+                if (confirm('Are you sure you want to delete this image?')) {
+                    $.ajax({
+                        url: '{{ route('itineraries.gallery.delete', $itinerary->id) }}?image=' + image,
+                        type: 'POST',
+                        data: {
+                            _method: 'DELETE',
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            alert('Gallery image deleted successfully.');
+                            location.reload();
+                        },
+                        error: function(xhr) {
+                            alert('Failed to delete gallery image.');
+                        }
+                    });
+                }
+            });
         });
     </script>
     @endpush

@@ -25,13 +25,16 @@
                             <i class="bi bi-bag me-1"></i>My Orders
                         </a>
                     </li>
-                    @if(auth()->user()->isCreator())
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('itineraries.*') && !request()->routeIs('itineraries.index') ? 'active' : '' }}" href="{{ route('itineraries.create') }}">
-                                <i class="bi bi-plus-circle me-1"></i>Create Itinerary
-                            </a>
-                        </li>
-                    @endif
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('itineraries.my') ? 'active' : '' }}" href="{{ route('itineraries.my') }}">
+                            <i class="bi bi-collection me-1"></i>My Itineraries
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('itineraries.create') ? 'active' : '' }}" href="{{ route('itineraries.create') }}">
+                            <i class="bi bi-plus-circle me-1"></i>Create Itinerary
+                        </a>
+                    </li>
                 @endauth
             </ul>
 
