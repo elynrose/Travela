@@ -1,0 +1,396 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="h4 mb-0">Edit Itinerary</h2>
+            <a href="{{ route('itineraries.show', $itinerary) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Itinerary
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="{{ route('itineraries.update', $itinerary) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+
+                <div class="row g-4">
+                    <!-- Basic Information -->
+                    <div class="col-md-8">
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control @error('title') is-invalid @enderror" 
+                                id="title" name="title" value="{{ old('title', $itinerary->title) }}" required>
+                            @error('title')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control @error('description') is-invalid @enderror" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="5" 
+                                      required>{{ old('description', $itinerary->description) }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control @error('location') is-invalid @enderror" 
+                                    id="location" name="location" value="{{ old('location', $itinerary->location) }}" required>
+                                @error('location')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control @error('country') is-invalid @enderror" 
+                                    id="country" name="country" value="{{ old('country', $itinerary->country) }}" required>
+                                @error('country')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cover_image" class="form-label">Cover Image</label>
+                            @if($itinerary->getCoverImageUrl())
+                                <div class="mb-2">
+                                    <img src="{{ $itinerary->getCoverThumbUrl() }}" 
+                                         alt="Current cover image" 
+                                         class="img-thumbnail" 
+                                         style="max-height: 200px;">
+                                </div>
+                            @endif
+                            <input type="file" 
+                                   class="form-control @error('cover_image') is-invalid @enderror" 
+                                   id="cover_image" 
+                                   name="cover_image" 
+                                   accept="image/jpeg,image/png,image/jpg,image/gif">
+                            <div class="form-text">Upload a cover image (max 2MB, JPEG, PNG, or GIF)</div>
+                            @error('cover_image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Price and Duration -->
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label for="price" class="form-label">Price ($)</label>
+                            <input type="number" class="form-control @error('price') is-invalid @enderror" 
+                                id="price" name="price" value="{{ old('price', $itinerary->price) }}" min="0" step="0.01" required>
+                            @error('price')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="duration_days" class="form-label">Duration (days)</label>
+                            <input type="number" class="form-control @error('duration_days') is-invalid @enderror" 
+                                id="duration_days" name="duration_days" value="{{ old('duration_days', $itinerary->duration_days) }}" min="1" required>
+                            @error('duration_days')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="categories" class="form-label">Categories</label>
+                            <select class="form-select @error('categories') is-invalid @enderror" 
+                                id="categories" name="categories[]" multiple required>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" 
+                                        {{ in_array($category->id, old('categories', $itinerary->categories->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('categories')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Highlights -->
+                    <div class="col-12">
+                        <div class="mb-4">
+                            <label class="form-label">Highlights</label>
+                            <div id="highlights-container">
+                                @foreach(old('highlights', $itinerary->highlights) as $index => $highlight)
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" 
+                                            name="highlights[]" value="{{ $highlight }}" required>
+                                        <button type="button" class="btn btn-outline-danger remove-highlight">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-highlight">
+                                <i class="bi bi-plus me-2"></i>Add Highlight
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Included Items -->
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label">What's Included</label>
+                            <div id="included-items-container">
+                                @foreach(old('included_items', $itinerary->included_items) as $index => $item)
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" 
+                                            name="included_items[]" value="{{ $item }}" required>
+                                        <button type="button" class="btn btn-outline-danger remove-item">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-included-item">
+                                <i class="bi bi-plus me-2"></i>Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Excluded Items -->
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label">What's Not Included</label>
+                            <div id="excluded-items-container">
+                                @foreach(old('excluded_items', $itinerary->excluded_items) as $index => $item)
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" 
+                                            name="excluded_items[]" value="{{ $item }}" required>
+                                        <button type="button" class="btn btn-outline-danger remove-item">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-excluded-item">
+                                <i class="bi bi-plus me-2"></i>Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Requirements -->
+                    <div class="col-12">
+                        <div class="mb-4">
+                            <label class="form-label">Requirements</label>
+                            <div id="requirements-container">
+                                @foreach(old('requirements', $itinerary->requirements) as $index => $requirement)
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" 
+                                            name="requirements[]" value="{{ $requirement }}" required>
+                                        <button type="button" class="btn btn-outline-danger remove-requirement">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-requirement">
+                                <i class="bi bi-plus me-2"></i>Add Requirement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Travel Information -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Travel Information</h3>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Transportation Type</label>
+                                    <select class="form-select" name="transportation_type" required>
+                                        <option value="flight" {{ old('transportation_type', $itinerary->transportation_type) === 'flight' ? 'selected' : '' }}>Flight</option>
+                                        <option value="road" {{ old('transportation_type', $itinerary->transportation_type) === 'road' ? 'selected' : '' }}>Road</option>
+                                        <option value="both" {{ old('transportation_type', $itinerary->transportation_type) === 'both' ? 'selected' : '' }}>Both Flight and Road</option>
+                                    </select>
+                                </div>
+
+                                <!-- Flight Information -->
+                                <div class="col-md-6 flight-info">
+                                    <label class="form-label fw-bold text-primary">Flight Duration</label>
+                                    <input type="text" class="form-control" name="flight_duration" value="{{ old('flight_duration', $itinerary->flight_duration) }}" placeholder="e.g., 2 hours 30 minutes">
+                                </div>
+
+                                <div class="col-md-6 flight-info">
+                                    <label class="form-label fw-bold text-primary">Airfare Range</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="airfare_min" value="{{ old('airfare_min', $itinerary->airfare_min) }}" placeholder="Min">
+                                        <span class="input-group-text">to</span>
+                                        <input type="number" class="form-control" name="airfare_max" value="{{ old('airfare_max', $itinerary->airfare_max) }}" placeholder="Max">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 flight-info">
+                                    <label class="form-label fw-bold text-primary">Booking Website</label>
+                                    <input type="url" class="form-control" name="booking_website" value="{{ old('booking_website', $itinerary->booking_website) }}" placeholder="https://example.com">
+                                </div>
+
+                                <!-- Road Information -->
+                                <div class="col-md-6 road-info">
+                                    <label class="form-label fw-bold text-primary">Road Distance</label>
+                                    <input type="text" class="form-control" name="road_distance" value="{{ old('road_distance', $itinerary->road_distance) }}" placeholder="e.g., 300 km">
+                                </div>
+
+                                <div class="col-md-6 road-info">
+                                    <label class="form-label fw-bold text-primary">Road Duration</label>
+                                    <input type="text" class="form-control" name="road_duration" value="{{ old('road_duration', $itinerary->road_duration) }}" placeholder="e.g., 4 hours">
+                                </div>
+
+                                <div class="col-md-6 road-info">
+                                    <label class="form-label fw-bold text-primary">Road Type</label>
+                                    <select class="form-select" name="road_type">
+                                        <option value="highway" {{ old('road_type', $itinerary->road_type) === 'highway' ? 'selected' : '' }}>Highway</option>
+                                        <option value="local" {{ old('road_type', $itinerary->road_type) === 'local' ? 'selected' : '' }}>Local Roads</option>
+                                        <option value="mixed" {{ old('road_type', $itinerary->road_type) === 'mixed' ? 'selected' : '' }}>Mixed</option>
+                                    </select>
+                                </div>
+
+                                <!-- Common Information -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Languages Spoken</label>
+                                    <input type="text" class="form-control" name="languages" value="{{ old('languages', $itinerary->languages) }}" placeholder="e.g., English, Swahili">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Peak Travel Times</label>
+                                    <input type="text" class="form-control" name="peak_travel_times" value="{{ old('peak_travel_times', $itinerary->peak_travel_times) }}" placeholder="e.g., June to September">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Travel Agency</label>
+                                    <input type="text" class="form-control" name="travel_agency" value="{{ old('travel_agency', $itinerary->travel_agency) }}" placeholder="Agency name">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Agency Fees</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="agency_fees" value="{{ old('agency_fees', $itinerary->agency_fees) }}" placeholder="Agency fees">
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-primary">Additional Travel Notes</label>
+                                    <textarea class="form-control" name="travel_notes" rows="3" placeholder="Any additional travel information, requirements, or tips">{{ old('travel_notes', $itinerary->travel_notes) }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ route('itineraries.show', $itinerary) }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Itinerary</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        // Add highlight
+        document.getElementById('add-highlight').addEventListener('click', function() {
+            const container = document.getElementById('highlights-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="highlights[]" required>
+                <button type="button" class="btn btn-outline-danger remove-highlight">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+
+        // Remove highlight
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-highlight')) {
+                e.target.closest('.input-group').remove();
+            }
+        });
+
+        // Add included item
+        document.getElementById('add-included-item').addEventListener('click', function() {
+            const container = document.getElementById('included-items-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="included_items[]" required>
+                <button type="button" class="btn btn-outline-danger remove-item">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+
+        // Add excluded item
+        document.getElementById('add-excluded-item').addEventListener('click', function() {
+            const container = document.getElementById('excluded-items-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="excluded_items[]" required>
+                <button type="button" class="btn btn-outline-danger remove-item">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+
+        // Remove item (included or excluded)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item')) {
+                e.target.closest('.input-group').remove();
+            }
+        });
+
+        // Add requirement
+        document.getElementById('add-requirement').addEventListener('click', function() {
+            const container = document.getElementById('requirements-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="requirements[]" required>
+                <button type="button" class="btn btn-outline-danger remove-requirement">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+
+        // Remove requirement
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-requirement')) {
+                e.target.closest('.input-group').remove();
+            }
+        });
+
+        // Show/hide transportation specific fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const transportationType = document.querySelector('select[name="transportation_type"]');
+            const flightInfo = document.querySelectorAll('.flight-info');
+            const roadInfo = document.querySelectorAll('.road-info');
+
+            function updateFields() {
+                const value = transportationType.value;
+                flightInfo.forEach(el => el.style.display = (value === 'flight' || value === 'both') ? 'block' : 'none');
+                roadInfo.forEach(el => el.style.display = (value === 'road' || value === 'both') ? 'block' : 'none');
+            }
+
+            transportationType.addEventListener('change', updateFields);
+            updateFields(); // Initial state
+        });
+    </script>
+    @endpush
+</x-app-layout> 
