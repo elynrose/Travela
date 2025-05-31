@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('itineraries', function (Blueprint $table) {
-            $table->string('cover_image')->nullable()->after('description');
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_admin')->default(false);
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('itineraries', function (Blueprint $table) {
-            $table->dropColumn('cover_image');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('is_admin');
         });
     }
 };

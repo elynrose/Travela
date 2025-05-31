@@ -21,6 +21,11 @@
                 </li>
                 @auth
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('orders.index') ? 'active' : '' }}" href="{{ route('orders.index') }}">
                             <i class="bi bi-bag me-1"></i>My Orders
                         </a>
@@ -78,6 +83,11 @@
                             @if(auth()->user()->isCreator())
                                 <a class="dropdown-item" href="{{ route('payouts.index') }}">
                                     <i class="bi bi-wallet2 me-2"></i>{{ __('Payouts') }}
+                                </a>
+                            @endif
+                            @if(auth()->user()->is_admin)
+                                <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                                    <i class="bi bi-shield-lock me-2"></i>{{ __('Admin Area') }}
                                 </a>
                             @endif
                             <div class="dropdown-divider"></div>

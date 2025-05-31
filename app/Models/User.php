@@ -32,6 +32,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'stripe_customer_id',
         'bio',
         'location',
+        'is_admin',
+        'is_blocked',
     ];
 
     /**
@@ -52,6 +54,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_admin' => 'boolean',
+        'is_blocked' => 'boolean',
     ];
 
     public function itineraries()
@@ -166,5 +170,10 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     {
         $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
         $this->notify(new \App\Notifications\WelcomeNotification);
+    }
+
+    public function payoutRequests()
+    {
+        return $this->hasMany(PayoutRequest::class);
     }
 }

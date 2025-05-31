@@ -6,6 +6,7 @@ use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PayoutRequestController;
 
 Route::get('/', function () {
     $featuredItineraries = \App\Models\Itinerary::with(['user', 'categories'])
@@ -75,6 +76,18 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::post('/payment/create-intent/{order}', [PaymentController::class, 'createPaymentIntent'])->name('payment.create-intent');
     Route::post('/payment/success', [PaymentController::class, 'handleSuccessfulPayment'])->name('payment.success');
+
+    // Payout Requests
+    Route::get('/payout-requests', [PayoutRequestController::class, 'index'])->name('payout-requests.index');
+    Route::get('/payout-requests/create', [PayoutRequestController::class, 'create'])->name('payout-requests.create');
+    Route::post('/payout-requests', [PayoutRequestController::class, 'store'])->name('payout-requests.store');
+    Route::get('/payout-requests/{payoutRequest}', [PayoutRequestController::class, 'show'])->name('payout-requests.show');
+    
+    // Admin only routes
+    Route::middleware(['web', \App\Http\Middleware\CheckAdmin::class])->group(function () {
+        Route::post('/payout-requests/{payoutRequest}/approve', [PayoutRequestController::class, 'approve'])->name('payout-requests.approve');
+        Route::post('/payout-requests/{payoutRequest}/reject', [PayoutRequestController::class, 'reject'])->name('payout-requests.reject');
+    });
 });
 
 // Stripe webhook route (no auth middleware)
@@ -96,5 +109,39 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+
+// Admin Routes
+Route::middleware(['auth', 'web', \App\Http\Middleware\CheckAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    
+    // User Management
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/block', [App\Http\Controllers\Admin\UserController::class, 'block'])->name('users.block');
+    Route::post('/users/{user}/unblock', [App\Http\Controllers\Admin\UserController::class, 'unblock'])->name('users.unblock');
+    
+    // Itinerary Management
+    Route::get('/itineraries', [App\Http\Controllers\Admin\ItineraryController::class, 'index'])->name('itineraries.index');
+    Route::get('/itineraries/{itinerary}', [App\Http\Controllers\Admin\ItineraryController::class, 'show'])->name('itineraries.show');
+    Route::post('/itineraries/{itinerary}/toggle-featured', [App\Http\Controllers\Admin\ItineraryController::class, 'toggleFeatured'])->name('itineraries.toggle-featured');
+    
+    // Order Management
+    Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+    
+    // Payout Management
+    Route::get('/payouts', [App\Http\Controllers\Admin\PayoutController::class, 'index'])->name('payouts.index');
+    Route::post('/payouts/{payoutRequest}/approve', [App\Http\Controllers\Admin\PayoutController::class, 'approve'])->name('payouts.approve');
+    Route::post('/payouts/{payoutRequest}/reject', [App\Http\Controllers\Admin\PayoutController::class, 'reject'])->name('payouts.reject');
+    
+    // Category Management
+    Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
+});
 
 require __DIR__.'/auth.php';

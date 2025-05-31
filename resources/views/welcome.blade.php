@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travela - Discover Your Next Adventure</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
+            <style>
         .hero-banner {
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset('images/hero-banner.jpg') }}') center/cover no-repeat;
             height: 500px;
@@ -27,7 +27,7 @@
         }
         .travela-footer a { color: #fff; text-decoration: underline; }
         .travela-footer a:hover { color: #ffc107; }
-    </style>
+            </style>
 </head>
 <body>
     <!-- Banner -->
@@ -71,7 +71,7 @@
                             <div class="card h-100 shadow-sm">
                                 @if($itinerary->getCoverImageUrl())
                                     <img src="{{ $itinerary->getCoverThumbUrl() }}" class="card-img-top" alt="{{ $itinerary->title }}" style="height: 200px; object-fit: cover;">
-                                @endif
+        @endif
                                 <div class="card-body">
                                     <h5 class="card-title">{{ $itinerary->title }}</h5>
                                     <p class="card-text text-muted">
@@ -86,7 +86,7 @@
                             </div>
                         </div>
                     @endforeach
-                @else
+                    @else
                     <div class="col-12 text-center">
                         <p>No featured itineraries available at the moment.</p>
                     </div>
@@ -257,5 +257,5 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    </body>
 </html>

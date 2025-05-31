@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
+
+class AdminMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        Log::info('AdminMiddleware called', [
+            'user' => auth()->user() ? [
+                'id' => auth()->user()->id,
+                'email' => auth()->user()->email,
+                'is_admin' => auth()->user()->is_admin
+            ] : null
+        ]);
+
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            Log::warning('AdminMiddleware: Unauthorized access attempt', [
+                'user' => auth()->user() ? [
+                    'id' => auth()->user()->id,
+                    'email' => auth()->user()->email,
+                    'is_admin' => auth()->user()->is_admin
+                ] : null
+            ]);
+            abort(403, 'Unauthorized access.');
+        }
+
+        return $next($request);
+    }
+}

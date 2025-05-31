@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Providers\RouteServiceProvider;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -28,7 +29,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if (Auth::user()->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 
     /**
@@ -43,5 +48,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 }
