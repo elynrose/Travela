@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\PayoutRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PayoutRequestController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware(\App\Http\Middleware\CheckAdmin::class)->except(['create', 'store', 'index']);
     }
 
     /**
@@ -102,6 +102,7 @@ class PayoutRequestController extends Controller
 
     public function approve(PayoutRequest $payoutRequest)
     {
+        $this->authorize('update', $payoutRequest);
         $payoutRequest->update([
             'status' => 'approved',
             'processed_at' => now(),
@@ -112,6 +113,7 @@ class PayoutRequestController extends Controller
 
     public function reject(Request $request, PayoutRequest $payoutRequest)
     {
+        $this->authorize('update', $payoutRequest);
         $request->validate([
             'admin_notes' => 'required|string',
         ]);
@@ -123,5 +125,57 @@ class PayoutRequestController extends Controller
         ]);
 
         return back()->with('success', 'Payout request rejected.');
+    }
+
+    public function complete(PayoutRequest $payoutRequest)
+    {
+        $this->authorize('update', $payoutRequest);
+        
+        if ($payoutRequest->status !== 'approved') {
+            return back()->with('error', 'Only approved payout requests can be marked as completed.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update the payout request status
+            $payoutRequest->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            // Create a payout record
+            $payoutRequest->user->payouts()->create([
+                'amount' => $payoutRequest->amount,
+                'payment_method' => $payoutRequest->payment_method,
+                'payment_details' => $payoutRequest->payment_details,
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            // Reduce the user's balance
+            $user = $payoutRequest->user;
+            $user->orders()
+                ->where('payment_status', 'completed')
+                ->where('seller_amount', '>', 0)
+                ->orderBy('created_at')
+                ->each(function ($order) use ($payoutRequest) {
+                    if ($payoutRequest->amount <= 0) {
+                        return false;
+                    }
+
+                    $deductionAmount = min($order->seller_amount, $payoutRequest->amount);
+                    $order->update([
+                        'seller_amount' => $order->seller_amount - $deductionAmount
+                    ]);
+                    $payoutRequest->amount -= $deductionAmount;
+                });
+
+            DB::commit();
+            return back()->with('success', 'Payout request marked as completed and user balance has been updated.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to complete payout request. Please try again.');
+        }
     }
 }

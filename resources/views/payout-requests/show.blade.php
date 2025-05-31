@@ -15,7 +15,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h5 class="card-title mb-0">Request #{{ $payoutRequest->id }}</h5>
-                            <span class="badge bg-{{ $payoutRequest->status === 'approved' ? 'success' : ($payoutRequest->status === 'rejected' ? 'danger' : 'warning') }}">
+                            <span class="badge bg-{{ $payoutRequest->status === 'completed' ? 'success' : ($payoutRequest->status === 'approved' ? 'info' : ($payoutRequest->status === 'rejected' ? 'danger' : 'warning')) }}">
                                 {{ ucfirst($payoutRequest->status) }}
                             </span>
                         </div>
@@ -66,6 +66,13 @@
                             </div>
                         @endif
 
+                        @if($payoutRequest->completed_at)
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Completed On</label>
+                                <p class="mb-0">{{ $payoutRequest->completed_at->format('F d, Y H:i') }}</p>
+                            </div>
+                        @endif
+
                         @if($payoutRequest->isPending() && auth()->user()->isAdmin())
                             <div class="d-flex gap-2 mt-4">
                                 <form action="{{ route('payout-requests.approve', $payoutRequest) }}" method="POST" class="d-inline">
@@ -81,6 +88,17 @@
                                         data-bs-target="#rejectModal">
                                     <i class="bi bi-x-lg me-2"></i>Reject
                                 </button>
+                            </div>
+                        @endif
+
+                        @if($payoutRequest->status === 'approved' && auth()->user()->isAdmin())
+                            <div class="mt-4">
+                                <form action="{{ route('payout-requests.complete', $payoutRequest) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Mark as Completed
+                                    </button>
+                                </form>
                             </div>
                         @endif
                     </div>

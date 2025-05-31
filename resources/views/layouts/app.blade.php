@@ -22,6 +22,9 @@
             body {
                 font-family: 'Figtree', sans-serif;
                 background-color: #f8f9fa;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
             }
             .navbar-brand img {
                 height: 40px;
@@ -34,6 +37,9 @@
             }
             .card:hover {
                 transform: translateY(-5px);
+            }
+            main {
+                flex: 1;
             }
         </style>
 
@@ -64,6 +70,9 @@
                 {{ $slot }}
             </div>
         </main>
+
+        <!-- Footer -->
+        <x-footer />
 
         <!-- Bootstrap Bundle with Popper -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

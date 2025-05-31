@@ -2,9 +2,19 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 mb-0">Order Details</h2>
-            <a href="{{ route('orders.index') }}" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left me-2"></i>Back to Orders
-            </a>
+            <div>
+                @if($order->payment_status === 'completed')
+                    <form action="{{ route('itineraries.copy', $order->itinerary) }}" method="POST" class="d-inline me-2">
+                        @csrf
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-files me-2"></i>Copy Itinerary
+                        </button>
+                    </form>
+                @endif
+                <a href="{{ route('orders.index') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Orders
+                </a>
+            </div>
         </div>
     </x-slot>
 

@@ -6,6 +6,8 @@ use App\Models\Itinerary;
 use App\Policies\ItineraryPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\PayoutRequest;
+use App\Policies\PayoutRequestPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Itinerary::class => ItineraryPolicy::class,
+        PayoutRequest::class => PayoutRequestPolicy::class,
     ];
 
     /**

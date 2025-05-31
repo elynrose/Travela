@@ -7,6 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayoutRequestController;
+use App\Http\Controllers\PageController;
 
 Route::get('/', function () {
     $featuredItineraries = \App\Models\Itinerary::with(['user', 'categories'])
@@ -48,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
             ->name('days.photos.delete');
         Route::get('itineraries/{itinerary}/days/view', [ItineraryController::class, 'showDays'])->name('itineraries.days.show');
         Route::get('/my-itineraries', [ItineraryController::class, 'myItineraries'])->name('itineraries.my');
+        Route::post('/itineraries/{itinerary}/copy', [ItineraryController::class, 'copy'])->name('itineraries.copy');
     });
 
     // Orders
@@ -82,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payout-requests/create', [PayoutRequestController::class, 'create'])->name('payout-requests.create');
     Route::post('/payout-requests', [PayoutRequestController::class, 'store'])->name('payout-requests.store');
     Route::get('/payout-requests/{payoutRequest}', [PayoutRequestController::class, 'show'])->name('payout-requests.show');
+    Route::post('/payout-requests/{payoutRequest}/complete', [PayoutRequestController::class, 'complete'])->name('payout-requests.complete');
     
     // Admin only routes
     Route::middleware(['web', \App\Http\Middleware\CheckAdmin::class])->group(function () {
@@ -143,5 +146,8 @@ Route::middleware(['auth', 'web', \App\Http\Middleware\CheckAdmin::class])->pref
     Route::put('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 });
+
+// Static Pages
+Route::get('/terms', [PageController::class, 'terms'])->name('pages.terms');
 
 require __DIR__.'/auth.php';

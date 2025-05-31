@@ -833,4 +833,39 @@ class ItineraryController extends Controller
 
         return redirect()->back()->with('success', 'Gallery image deleted successfully.');
     }
+
+    /**
+     * Copy an itinerary for the authenticated user
+     */
+    public function copy(Itinerary $itinerary)
+    {
+        // Check if user has purchased the itinerary
+        if (!auth()->user()->hasPurchased($itinerary)) {
+            return redirect()->back()->with('error', 'You must purchase this itinerary before copying it.');
+        }
+
+        // Create a new itinerary based on the purchased one
+        $newItinerary = $itinerary->replicate();
+        $newItinerary->user_id = auth()->id();
+        $newItinerary->title = 'My Copy of ' . $itinerary->title;
+        $newItinerary->slug = Str::slug($newItinerary->title) . '-' . time();
+        $newItinerary->is_published = false;
+        $newItinerary->is_featured = false;
+        $newItinerary->views_count = 0;
+        $newItinerary->purchases_count = 0;
+        $newItinerary->save();
+
+        // Copy the days
+        foreach ($itinerary->days as $day) {
+            $newDay = $day->replicate();
+            $newDay->itinerary_id = $newItinerary->id;
+            $newDay->save();
+        }
+
+        // Copy the categories
+        $newItinerary->categories()->attach($itinerary->categories->pluck('id'));
+
+        return redirect()->route('itineraries.edit', $newItinerary)
+            ->with('success', 'Itinerary copied successfully! You can now edit your version.');
+    }
 }
