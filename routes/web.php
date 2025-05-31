@@ -145,9 +145,17 @@ Route::middleware(['auth', 'web', \App\Http\Middleware\CheckAdmin::class])->pref
     Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // Page Management
+    Route::resource('pages', App\Http\Controllers\Admin\PageController::class);
 });
 
 // Static Pages
 Route::get('/terms', [PageController::class, 'terms'])->name('pages.terms');
+Route::get('/privacy', [PageController::class, 'privacy'])->name('pages.privacy');
+Route::get('/cookies', [PageController::class, 'cookies'])->name('pages.cookies');
+
+// Dynamic Pages
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
 
 require __DIR__.'/auth.php';

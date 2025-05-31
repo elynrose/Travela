@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ItinerarySeeder::class,
             OrderSeeder::class,
+            PageSeeder::class,
         ]);
     }
 }

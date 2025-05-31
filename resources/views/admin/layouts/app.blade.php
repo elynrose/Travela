@@ -178,6 +178,9 @@
                         <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">
                             <i class="bi bi-tags"></i> Categories
                         </a>
+                        <a class="nav-link {{ request()->routeIs('admin.pages.*') ? 'active' : '' }}" href="{{ route('admin.pages.index') }}">
+                            <i class="bi bi-file-text"></i> Pages
+                        </a>
                         <div class="mt-4">
                             <a class="nav-link" href="{{ route('dashboard') }}">
                                 <i class="bi bi-arrow-left"></i> Back to Site

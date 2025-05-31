@@ -281,35 +281,43 @@
     </section>
 
     <!-- Footer -->
-    <footer class="travela-footer mt-5">
+    <footer class="travela-footer">
         <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <h5 class="mb-4">About Travela</h5>
-                    <p>We're passionate about creating unforgettable travel experiences that combine adventure, luxury, and authentic local culture.</p>
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="mb-3">Travela</h5>
+                    <p>Your trusted platform for discovering and sharing amazing travel experiences.</p>
                 </div>
-                <div class="col-lg-4">
-                    <h5 class="mb-4">Quick Links</h5>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="mb-3">Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="{{ route('itineraries.index') }}">Browse Adventures</a></li>
+                        <li class="mb-2"><a href="{{ route('home') }}">Home</a></li>
+                        <li class="mb-2"><a href="{{ route('itineraries.index') }}">Browse Itineraries</a></li>
                         <li class="mb-2"><a href="{{ route('contact') }}">Contact Us</a></li>
-                        <li class="mb-2"><a href="#">About Us</a></li>
-                        <li class="mb-2"><a href="#">Terms & Conditions</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-4">
-                    <h5 class="mb-4">Connect With Us</h5>
-                    <div class="d-flex gap-3">
-                        <a href="#"><i class="bi bi-facebook fs-4"></i></a>
-                        <a href="#"><i class="bi bi-instagram fs-4"></i></a>
-                        <a href="#"><i class="bi bi-twitter fs-4"></i></a>
-                        <a href="#"><i class="bi bi-linkedin fs-4"></i></a>
-                    </div>
+                <div class="col-md-4">
+                    <h5 class="mb-3">Legal</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ route('pages.terms') }}">Terms & Conditions</a></li>
+                        <li class="mb-2"><a href="{{ route('pages.privacy') }}">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="{{ route('pages.cookies') }}">Cookie Policy</a></li>
+                    </ul>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="text-center">
-                <p class="mb-0">&copy; {{ date('Y') }} Travela. All rights reserved.</p>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; {{ date('Y') }} Travela. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="social-links">
+                        <a href="#" class="me-3"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="me-3"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="me-3"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>

@@ -17,8 +17,8 @@
                 <h5 class="mb-3">Legal</h5>
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{{ route('pages.terms') }}" class="text-decoration-none text-muted">Terms & Conditions</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Privacy Policy</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Cookie Policy</a></li>
+                    <li class="mb-2"><a href="{{ route('pages.privacy') }}" class="text-decoration-none text-muted">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="{{ route('pages.cookies') }}" class="text-decoration-none text-muted">Cookie Policy</a></li>
                 </ul>
             </div>
         </div>

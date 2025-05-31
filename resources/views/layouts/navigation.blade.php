@@ -85,7 +85,7 @@
                                     <i class="bi bi-wallet2 me-2"></i>{{ __('Payouts') }}
                                 </a>
                             @endif
-                            @if(auth()->user()->is_admin)
+                            @if(auth()->user()->isAdmin())
                                 <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
                                     <i class="bi bi-shield-lock me-2"></i>{{ __('Admin Area') }}
                                 </a>
