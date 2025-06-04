@@ -28,42 +28,47 @@ class ItineraryController extends Controller
      */
     public function index()
     {
-        $query = Itinerary::with(['user', 'categories'])
-            ->where('is_published', true);
+        try {
+            $query = Itinerary::with(['user', 'categories', 'days'])
+                ->where('is_published', true);
 
-        // Apply filters
-        if (request('location')) {
-            $query->where('location', 'like', '%' . request('location') . '%');
-        }
-
-        if (request('duration')) {
-            $duration = explode('-', request('duration'));
-            if (count($duration) === 2) {
-                $query->whereBetween('duration_days', $duration);
-            } elseif (request('duration') === '15+') {
-                $query->where('duration_days', '>=', 15);
+            // Apply filters
+            if (request('location')) {
+                $query->where('location', 'like', '%' . request('location') . '%');
             }
-        }
 
-        if (request('price_range')) {
-            $priceRange = explode('-', request('price_range'));
-            if (count($priceRange) === 2) {
-                $query->whereBetween('price', $priceRange);
-            } elseif (request('price_range') === '1001+') {
-                $query->where('price', '>=', 1001);
+            if (request('duration')) {
+                $duration = explode('-', request('duration'));
+                if (count($duration) === 2) {
+                    $query->whereBetween('duration_days', $duration);
+                } elseif (request('duration') === '15+') {
+                    $query->where('duration_days', '>=', 15);
+                }
             }
+
+            if (request('price_range')) {
+                $priceRange = explode('-', request('price_range'));
+                if (count($priceRange) === 2) {
+                    $query->whereBetween('price', $priceRange);
+                } elseif (request('price_range') === '1001+') {
+                    $query->where('price', '>=', 1001);
+                }
+            }
+
+            if (request('category')) {
+                $query->whereHas('categories', function ($q) {
+                    $q->where('categories.id', request('category'));
+                });
+            }
+
+            $itineraries = $query->latest()->paginate(12);
+            $categories = Category::where('is_active', true)->get();
+
+            return view('itineraries.index', compact('itineraries', 'categories'));
+        } catch (\Exception $e) {
+            \Log::error('Error in itineraries index: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while loading itineraries.');
         }
-
-        if (request('category')) {
-            $query->whereHas('categories', function ($q) {
-                $q->where('categories.id', request('category'));
-            });
-        }
-
-        $itineraries = $query->latest()->paginate(12);
-        $categories = Category::where('is_active', true)->get();
-
-        return view('itineraries.index', compact('itineraries', 'categories'));
     }
 
     /**
@@ -794,12 +799,17 @@ class ItineraryController extends Controller
      */
     public function myItineraries()
     {
-        $itineraries = auth()->user()->itineraries()
-            ->with(['categories', 'user'])
-            ->latest()
-            ->paginate(12);
+        try {
+            $itineraries = Itinerary::with(['user', 'categories', 'days'])
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->paginate(12);
 
-        return view('itineraries.my', compact('itineraries'));
+            return view('itineraries.my', compact('itineraries'));
+        } catch (\Exception $e) {
+            \Log::error('Error in my itineraries: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while loading your itineraries.');
+        }
     }
 
     /**
