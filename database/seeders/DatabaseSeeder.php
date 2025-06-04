@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ItinerarySeeder::class,
             OrderSeeder::class,
             PageSeeder::class,
+            DaySeeder::class,
         ]);
     }
 }

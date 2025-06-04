@@ -1,13 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="h4 mb-0">Manage Pages</h2>
-            <a href="{{ route('admin.pages.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Create New Page
-            </a>
-        </div>
-    </x-slot>
+@extends('admin.layouts.app')
 
+@section('content')
     <div class="container py-4">
         <div class="card">
             <div class="card-body">
@@ -69,4 +62,4 @@
             </div>
         </div>
     </div>
-</x-app-layout> 
+@endsection 

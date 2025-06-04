@@ -93,9 +93,9 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
-                    <h1 class="display-3 fw-bold mb-3">Discover Your Next Adventure</h1>
-                    <p class="lead mb-4">Explore handcrafted travel experiences that combine luxury, adventure, and authentic local culture.</p>
-                    <a href="{{ route('itineraries.index') }}" class="btn btn-warning btn-lg">Start Exploring</a>
+                    <h1 class="display-3 fw-bold mb-3">Your Travel Journey Made Simple</h1>
+                    <p class="lead mb-4">Buy and sell detailed travel itineraries. Let experienced travelers guide your next adventure.</p>
+                    <a href="{{ route('itineraries.index') }}" class="btn btn-warning btn-lg">Browse Itineraries</a>
                 </div>
             </div>
         </div>
@@ -109,49 +109,11 @@
                     <img src="{{ asset('images/travel-experience.jpg') }}" alt="Travel Experience" class="img-fluid rounded shadow">
                 </div>
                 <div class="col-lg-6">
-                    <h2 class="h3 mb-4">Your Journey, Your Story</h2>
-                    <p class="lead mb-4">At Travela, we believe that every journey should be as unique as the traveler. Our carefully curated itineraries are designed to create unforgettable experiences that go beyond the ordinary.</p>
-                    <p class="mb-4">Whether you're seeking adventure in the wild, cultural immersion in historic cities, or relaxation in paradise, we've got you covered with personalized travel experiences that match your dreams.</p>
-                    <a href="{{ route('itineraries.index') }}" class="btn btn-outline-warning">Explore Our Destinations</a>
+                    <h2 class="h3 mb-4">Why Plan When You Can Follow?</h2>
+                    <p class="lead mb-4">Travela is a marketplace where experienced travelers share their proven itineraries with those who want to travel without the hassle of planning.</p>
+                    <p class="mb-4">Whether you're a traveler looking to share your expertise or someone who wants to follow a well-crafted journey, Travela connects you with the perfect travel experience.</p>
+                    <a href="{{ route('itineraries.index') }}" class="btn btn-outline-warning">Explore Itineraries</a>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Itineraries -->
-    <section class="travela-section bg-light">
-        <div class="container">
-            <h2 class="text-center mb-5">Featured Adventures</h2>
-            <div class="row g-4">
-                @isset($featuredItineraries)
-                    @foreach($featuredItineraries as $itinerary)
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow-sm">
-                                @if($itinerary->getCoverImageUrl())
-                                    <img src="{{ $itinerary->getCoverThumbUrl() }}" class="card-img-top" alt="{{ $itinerary->title }}" style="height: 200px; object-fit: cover;">
-        @endif
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ $itinerary->title }}</h5>
-                                    <p class="card-text text-muted">
-                                        <i class="bi bi-geo-alt"></i> {{ $itinerary->location }}, {{ $itinerary->country }}
-                                    </p>
-                                    <p class="card-text">{{ Str::limit($itinerary->description, 100) }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="h5 mb-0">${{ number_format($itinerary->price) }}</span>
-                                        <a href="{{ route('itineraries.show', $itinerary) }}" class="btn btn-warning">View Details</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                    @else
-                    <div class="col-12 text-center">
-                        <p>No featured itineraries available at the moment.</p>
-                    </div>
-                @endisset
-            </div>
-            <div class="text-center mt-5">
-                <a href="{{ route('itineraries.index') }}" class="btn btn-outline-warning">View All Adventures</a>
             </div>
         </div>
     </section>
@@ -164,67 +126,65 @@
                 <div class="col-md-4">
                     <div class="text-center">
                         <div class="display-4 text-warning mb-3">
-                            <i class="bi bi-shield-check"></i>
+                            <i class="bi bi-map"></i>
                         </div>
-                        <h3 class="h5 mb-3">Trusted Experience</h3>
-                        <p class="text-muted">Our itineraries are crafted by experienced travelers who know the best local spots and hidden gems.</p>
+                        <h3 class="h5 mb-3">Proven Itineraries</h3>
+                        <p class="text-muted">Follow itineraries created by experienced travelers who have already done the journey.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-center">
                         <div class="display-4 text-warning mb-3">
-                            <i class="bi bi-heart"></i>
+                            <i class="bi bi-cash-stack"></i>
                         </div>
-                        <h3 class="h5 mb-3">Personalized Service</h3>
-                        <p class="text-muted">We tailor each journey to your preferences, ensuring a unique and memorable experience.</p>
+                        <h3 class="h5 mb-3">Earn While Sharing</h3>
+                        <p class="text-muted">Share your travel expertise and earn money by selling your itineraries to other travelers.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-center">
                         <div class="display-4 text-warning mb-3">
-                            <i class="bi bi-globe"></i>
+                            <i class="bi bi-clock"></i>
                         </div>
-                        <h3 class="h5 mb-3">Global Network</h3>
-                        <p class="text-muted">Access to exclusive experiences and local connections worldwide.</p>
+                        <h3 class="h5 mb-3">Save Time</h3>
+                        <p class="text-muted">Skip the planning phase and start enjoying your trip with ready-to-follow itineraries.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Featured Travellers -->
+    <!-- How It Works -->
     <section class="travela-section bg-light">
         <div class="container">
-            <h2 class="text-center mb-5">Featured Travellers</h2>
+            <h2 class="text-center mb-5">How It Works</h2>
             <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <img src="{{ asset('images/traveler1.jpg') }}" alt="Traveler" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
-                            <h5 class="card-title">Sarah Johnson</h5>
-                            <p class="text-muted">Adventure Enthusiast</p>
-                            <p class="card-text">"Travela helped me discover the most amazing hidden gems in Tanzania. The safari experience was beyond my expectations!"</p>
-                        </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="display-4 text-warning mb-3">1</div>
+                        <h3 class="h5 mb-3">Browse</h3>
+                        <p class="text-muted">Explore itineraries created by experienced travelers.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <img src="{{ asset('images/traveler2.jpg') }}" alt="Traveler" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
-                            <h5 class="card-title">Michael Chen</h5>
-                            <p class="text-muted">Cultural Explorer</p>
-                            <p class="card-text">"The attention to detail and local experiences made my trip to Morocco unforgettable. Highly recommended!"</p>
-                        </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="display-4 text-warning mb-3">2</div>
+                        <h3 class="h5 mb-3">Purchase</h3>
+                        <p class="text-muted">Buy the itinerary that matches your travel style.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <img src="{{ asset('images/traveler3.jpg') }}" alt="Traveler" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
-                            <h5 class="card-title">Emma Rodriguez</h5>
-                            <p class="text-muted">Luxury Traveler</p>
-                            <p class="card-text">"From the moment I booked to the end of my journey, everything was perfect. The luxury accommodations were outstanding."</p>
-                        </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="display-4 text-warning mb-3">3</div>
+                        <h3 class="h5 mb-3">Follow</h3>
+                        <p class="text-muted">Get detailed day-by-day plans and follow the journey.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="display-4 text-warning mb-3">4</div>
+                        <h3 class="h5 mb-3">Enjoy</h3>
+                        <p class="text-muted">Experience your trip without the stress of planning.</p>
                     </div>
                 </div>
             </div>
@@ -241,36 +201,48 @@
                         <div class="accordion-item">
                             <h3 class="accordion-header">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                    How do I book a trip?
+                                    What is a travel itinerary?
                                 </button>
                             </h3>
                             <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Booking a trip is easy! Simply browse our itineraries, select your preferred dates, and follow the booking process. Our team will guide you through every step.
+                                    A travel itinerary is a detailed day-by-day plan of your trip, including accommodations, activities, meals, and transportation. It's like having a local guide's knowledge in your pocket.
                                 </div>
                             </div>
                         </div>
                         <div class="accordion-item">
                             <h3 class="accordion-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                    What's included in the price?
+                                    How do I sell my itinerary?
                                 </button>
                             </h3>
                             <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Each itinerary clearly lists what's included and excluded. Typically, we include accommodation, transportation, activities, and some meals. Check the specific itinerary for details.
+                                    Create an account, click "Create Itinerary," and fill in the details of your journey. Include day-by-day plans, accommodation recommendations, and local tips. Once approved, your itinerary will be available for purchase.
                                 </div>
                             </div>
                         </div>
                         <div class="accordion-item">
                             <h3 class="accordion-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                    Can I customize my itinerary?
+                                    What's included in a purchased itinerary?
                                 </button>
                             </h3>
                             <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Yes! We offer flexible itineraries that can be customized to your preferences. Contact our team to discuss your specific requirements.
+                                    Each itinerary includes detailed day-by-day plans, accommodation recommendations, activity suggestions, local tips, and estimated costs. You'll receive everything you need to follow the journey.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Can I modify a purchased itinerary?
+                                </button>
+                            </h3>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes! While the itinerary provides a complete plan, you can customize it to your preferences. Add or remove activities, change accommodations, or adjust the schedule to suit your needs.
                                 </div>
                             </div>
                         </div>

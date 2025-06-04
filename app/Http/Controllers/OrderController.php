@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Itinerary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Notifications\NewOrderCreated;
 
 class OrderController extends Controller
 {
@@ -69,6 +70,9 @@ class OrderController extends Controller
             'payment_status' => 'pending',
             'payment_method' => 'stripe', // We'll implement Stripe later
         ]);
+
+        // Send notification to the seller
+        $itinerary->user->notify(new NewOrderCreated($order));
 
         return redirect()->route('orders.show', $order)
             ->with('success', 'Order created successfully. Please complete the payment.');

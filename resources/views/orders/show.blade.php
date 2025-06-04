@@ -247,32 +247,26 @@
                 try {
                     const response = await fetch("{{ route('payment.create-intent', $order) }}", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
                         body: JSON.stringify({ order_id: "{{ $order->id }}" })
                     });
-                    const { url } = await response.json();
                     
-                    if (url) {
-                        window.location.href = url;
+                    const data = await response.json();
+                    
+                    if (data.url) {
+                        window.location.href = data.url;
                     } else {
-                        showMessage("An error occurred. Please try again.");
+                        showMessage(data.error || "An error occurred. Please try again.");
                         setLoading(false);
                     }
                 } catch (error) {
-                    showMessage("An error occurred. Please try again.");
+                    console.error('Payment error:', error);
+                    showMessage("An error occurred while processing your payment. Please try again.");
                     setLoading(false);
                 }
-            }
-
-            function showMessage(messageText) {
-                const messageContainer = document.querySelector("#payment-message");
-                messageContainer.classList.remove("d-none");
-                messageContainer.textContent = messageText;
-
-                setTimeout(function () {
-                    messageContainer.classList.add("d-none");
-                    messageText.textContent = "";
-                }, 4000);
             }
 
             function setLoading(isLoading) {
@@ -285,6 +279,12 @@
                     document.querySelector("#spinner").classList.add("d-none");
                     document.querySelector("#button-text").classList.remove("d-none");
                 }
+            }
+
+            function showMessage(messageText) {
+                const messageContainer = document.querySelector("#payment-message");
+                messageContainer.classList.remove("d-none");
+                messageContainer.textContent = messageText;
             }
         </script>
         @endpush

@@ -8,6 +8,9 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayoutRequestController;
 use App\Http\Controllers\PageController;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\ReceivedOrdersController;
+use App\Models\Order;
 
 Route::get('/', function () {
     $featuredItineraries = \App\Models\Itinerary::with(['user', 'categories'])
@@ -27,10 +30,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $itineraries = $user->itineraries()->latest()->take(5)->get();
-        $orders = $user->orders()->latest()->take(5)->get();
+        $receivedOrders = Order::whereHas('itinerary', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['user', 'itinerary'])
+            ->latest()
+            ->take(5)
+            ->get();
         $payouts = $user->payouts()->latest()->take(5)->get();
         
-        return view('dashboard', compact('itineraries', 'orders', 'payouts'));
+        return view('dashboard', compact('itineraries', 'receivedOrders', 'payouts'));
     })->name('dashboard');
 
     // Protected Itinerary Routes
@@ -77,7 +86,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Payment routes
     Route::post('/payment/create-intent/{order}', [PaymentController::class, 'createPaymentIntent'])->name('payment.create-intent');
-    Route::post('/payment/success', [PaymentController::class, 'handleSuccessfulPayment'])->name('payment.success');
+    Route::get('/payment/success', [PaymentController::class, 'handleSuccessfulPayment'])->name('payment.success');
 
     // Payout Requests
     Route::get('/payout-requests', [PayoutRequestController::class, 'index'])->name('payout-requests.index');
@@ -91,6 +100,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/payout-requests/{payoutRequest}/approve', [PayoutRequestController::class, 'approve'])->name('payout-requests.approve');
         Route::post('/payout-requests/{payoutRequest}/reject', [PayoutRequestController::class, 'reject'])->name('payout-requests.reject');
     });
+
+    // Received Orders Routes
+    Route::get('/received-orders', [ReceivedOrdersController::class, 'index'])->name('received-orders.index');
+    Route::get('/received-orders/{order}', [ReceivedOrdersController::class, 'show'])->name('received-orders.show');
+    Route::post('/received-orders/{order}/complete', [ReceivedOrdersController::class, 'complete'])->name('received-orders.complete');
 });
 
 // Stripe webhook route (no auth middleware)
@@ -157,5 +171,25 @@ Route::get('/cookies', [PageController::class, 'cookies'])->name('pages.cookies'
 
 // Dynamic Pages
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
+
+// Test route for email configuration with error reporting
+Route::get('/test-email-debug', function () {
+    try {
+        Mail::raw('This is a test email from Laravel using Mailpit!', function($message) {
+            $message->to('test@example.com')
+                    ->subject('Test Email');
+        });
+        
+        return 'Test email sent! Check Mailpit at http://localhost:8025';
+    } catch (\Exception $e) {
+        return 'Error sending email: ' . $e->getMessage() . '<br><br>Mail config: <br>' . 
+               'MAIL_MAILER=' . config('mail.default') . '<br>' .
+               'MAIL_HOST=' . config('mail.mailers.smtp.host') . '<br>' .
+               'MAIL_PORT=' . config('mail.mailers.smtp.port') . '<br>' .
+               'MAIL_FROM_ADDRESS=' . config('mail.from.address') . '<br>' .
+               'MAIL_FROM_NAME=' . config('mail.from.name') . '<br>' .
+               'APP_URL=' . config('app.url');
+    }
+});
 
 require __DIR__.'/auth.php';

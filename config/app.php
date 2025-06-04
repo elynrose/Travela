@@ -137,6 +137,8 @@ return [
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\StripeServiceProvider::class,
+        App\Providers\EmailServiceProvider::class,
     ])->toArray(),
 
 ];

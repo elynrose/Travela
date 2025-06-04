@@ -122,10 +122,11 @@
                         <div class="mb-4">
                             <label for="duration_days" class="form-label">Duration (days)</label>
                             <input type="number" class="form-control @error('duration_days') is-invalid @enderror" 
-                                id="duration_days" name="duration_days" value="{{ old('duration_days', $itinerary->duration_days) }}" min="1" required>
+                                id="duration_days" name="duration_days" value="{{ old('duration_days', $itinerary->days_count) }}" min="1" required>
                             @error('duration_days')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Total number of days in this itinerary</small>
                         </div>
 
                         <div class="mb-4">

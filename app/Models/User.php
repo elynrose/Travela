@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Notifications\CustomResetPasswordNotification;
 
 class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
@@ -157,10 +158,13 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
 
     /**
      * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
      */
-    public function sendPasswordResetNotification($token): void
+    public function sendPasswordResetNotification($token)
     {
-        $this->notify(new \App\Notifications\CustomResetPasswordNotification($token));
+        $this->notify(new CustomResetPasswordNotification($token));
     }
 
     /**
@@ -183,5 +187,66 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * Get the total sales amount for the user's itineraries.
+     *
+     * @return float
+     */
+    public function getTotalSalesAttribute()
+    {
+        return $this->itineraries()
+            ->whereHas('orders', function ($query) {
+                $query->where('payment_status', 'completed');
+            })
+            ->withCount(['orders' => function ($query) {
+                $query->where('payment_status', 'completed');
+            }])
+            ->get()
+            ->sum('orders_count');
+    }
+
+    /**
+     * Get the available balance (total sales minus platform fee and withdrawals).
+     *
+     * @return float
+     */
+    public function getAvailableBalanceAttribute()
+    {
+        $totalSalesAmount = $this->itineraries()
+            ->whereHas('orders', function ($query) {
+                $query->where('payment_status', 'completed');
+            })
+            ->withSum(['orders' => function ($query) {
+                $query->where('payment_status', 'completed');
+            }], 'amount')
+            ->get()
+            ->sum('orders_sum_amount');
+
+        $platformFee = $totalSalesAmount * 0.30; // 30% platform fee
+        $totalWithdrawn = $this->payouts()
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        return $totalSalesAmount - $platformFee - $totalWithdrawn;
+    }
+
+    /**
+     * Get the total number of sales.
+     *
+     * @return int
+     */
+    public function getTotalSalesCountAttribute()
+    {
+        return $this->itineraries()
+            ->whereHas('orders', function ($query) {
+                $query->where('payment_status', 'completed');
+            })
+            ->withCount(['orders' => function ($query) {
+                $query->where('payment_status', 'completed');
+            }])
+            ->get()
+            ->sum('orders_count');
     }
 }

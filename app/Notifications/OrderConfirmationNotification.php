@@ -35,18 +35,14 @@ class OrderConfirmationNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Order Confirmation - ' . config('app.name'))
+            ->subject('Order Confirmation - Order #' . $this->order->order_number)
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Thank you for your order. We\'re excited to help you plan your next adventure!')
+            ->line('Your order has been received and is being processed.')
             ->line('Order Details:')
-            ->line('• Order Number: ' . $this->order->order_number)
-            ->line('• Itinerary: ' . $this->order->itinerary->title)
-            ->line('• Amount: $' . number_format($this->order->amount, 2))
-            ->line('• Date: ' . $this->order->created_at->format('F d, Y'))
-            ->action('View Order Details', route('orders.show', $this->order))
-            ->line('You can access your purchased itinerary anytime from your dashboard.')
-            ->line('If you have any questions about your order, please don\'t hesitate to contact our support team.')
-            ->line('Happy travels!');
+            ->line('Itinerary: ' . $this->order->itinerary->title)
+            ->line('Amount: $' . number_format($this->order->amount, 2))
+            ->action('View Order Details', route('received-orders.show', $this->order))
+            ->line('Thank you for your order!');
     }
 
     /**

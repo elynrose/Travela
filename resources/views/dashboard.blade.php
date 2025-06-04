@@ -19,12 +19,12 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0 bg-primary bg-opacity-10 rounded-3 p-3">
-                                <i class="bi bi-currency-dollar text-primary fs-4"></i>
+                                <i class="bi bi-journal-check text-primary fs-4"></i>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">Total Sales</h6>
-                                <h3 class="mb-0">${{ number_format(auth()->user()->orders()->where('payment_status', 'completed')->sum('amount'), 2) }}</h3>
-                                <small class="text-muted">Completed orders only</small>
+                                <h3 class="mb-0">{{ auth()->user()->total_sales }}</h3>
+                                <small class="text-muted">Number of itineraries sold</small>
                             </div>
                         </div>
                     </div>
@@ -41,8 +41,8 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">Available Balance</h6>
-                                <h3 class="mb-0">${{ number_format(auth()->user()->orders()->where('payment_status', 'completed')->sum('seller_amount'), 2) }}</h3>
-                                <small class="text-muted">Your earnings (70% of sales)</small>
+                                <h3 class="mb-0">${{ number_format(auth()->user()->available_balance, 2) }}</h3>
+                                <small class="text-muted">Total sales minus 30% platform fee and withdrawals</small>
                                 <div class="mt-2">
                                     <a href="{{ route('payout-requests.create') }}" class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-cash me-1"></i>Request Payout
@@ -78,7 +78,12 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-0">
-                        <h5 class="card-title mb-0">Recent Itineraries</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recent Itineraries</h5>
+                            <a href="{{ route('itineraries.index') }}" class="btn btn-sm btn-link text-primary">
+                                View More <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
@@ -118,11 +123,16 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-0">
-                        <h5 class="card-title mb-0">Recent Orders</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Orders Received</h5>
+                            <a href="{{ route('received-orders.index') }}" class="btn btn-sm btn-link text-primary">
+                                View More <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            @forelse($orders as $order)
+                            @forelse($receivedOrders as $order)
                                 <div class="list-group-item border-0 px-0">
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0 bg-success bg-opacity-10 rounded-3 p-2 me-3">
@@ -132,15 +142,20 @@
                                             <h6 class="mb-1">Order #{{ $order->order_number }}</h6>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <small class="text-muted">{{ $order->created_at->diffForHumans() }}</small>
-                                                <span class="badge bg-success">${{ number_format($order->amount, 2) }}</span>
+                                                <span class="badge bg-{{ $order->payment_status === 'completed' ? 'success' : ($order->payment_status === 'pending' ? 'warning' : 'danger') }}">
+                                                    {{ ucfirst($order->payment_status) }}
+                                                </span>
                                             </div>
+                                            <small class="text-muted d-block mt-1">
+                                                {{ $order->user->name }} purchased {{ Str::limit($order->itinerary->title, 30) }}
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <div class="text-center py-4">
                                     <i class="bi bi-cart text-muted fs-1"></i>
-                                    <p class="text-muted mt-2">No orders yet</p>
+                                    <p class="text-muted mt-2">No orders received yet</p>
                                 </div>
                             @endforelse
                         </div>
@@ -152,7 +167,12 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-0">
-                        <h5 class="card-title mb-0">Recent Payouts</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recent Payouts</h5>
+                            <a href="{{ route('payouts.index') }}" class="btn btn-sm btn-link text-primary">
+                                View More <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">

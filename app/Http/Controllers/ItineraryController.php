@@ -295,6 +295,7 @@ class ItineraryController extends Controller
     {
         $this->authorize('update', $itinerary);
         $categories = Category::where('is_active', true)->get();
+        $itinerary->loadCount('days');
         return view('itineraries.edit', compact('itinerary', 'categories'));
     }
 
