@@ -29,8 +29,15 @@ class ItineraryController extends Controller
     public function index()
     {
         try {
+            \Log::info('Starting itineraries index method');
+            
             $query = Itinerary::with(['user', 'categories', 'days'])
                 ->where('is_published', true);
+
+            \Log::info('Base query built', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings()
+            ]);
 
             // Apply filters
             if (request('location')) {
@@ -61,13 +68,30 @@ class ItineraryController extends Controller
                 });
             }
 
+            \Log::info('Filters applied to query');
+
             $itineraries = $query->latest()->paginate(12);
+            
+            \Log::info('Itineraries retrieved', [
+                'count' => $itineraries->count(),
+                'total' => $itineraries->total()
+            ]);
+
             $categories = Category::where('is_active', true)->get();
+            
+            \Log::info('Categories retrieved', [
+                'count' => $categories->count()
+            ]);
 
             return view('itineraries.index', compact('itineraries', 'categories'));
         } catch (\Exception $e) {
-            \Log::error('Error in itineraries index: ' . $e->getMessage());
-            return back()->with('error', 'An error occurred while loading itineraries.');
+            \Log::error('Error in itineraries index: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'request' => request()->all(),
+                'user' => auth()->id()
+            ]);
+            return back()->with('error', 'An error occurred while loading itineraries. Please try again later.');
         }
     }
 
@@ -288,9 +312,34 @@ class ItineraryController extends Controller
      */
     public function show(Itinerary $itinerary)
     {
-        $this->authorize('view', $itinerary);
-        $itinerary->load(['user', 'categories']);
-        return view('itineraries.show', compact('itinerary'));
+        try {
+            \Log::info('Starting itinerary show method', [
+                'itinerary_id' => $itinerary->id,
+                'slug' => $itinerary->slug
+            ]);
+
+            $this->authorize('view', $itinerary);
+            
+            \Log::info('Authorization passed');
+            
+            $itinerary->load(['user', 'categories', 'days']);
+            
+            \Log::info('Relationships loaded', [
+                'has_user' => $itinerary->user ? true : false,
+                'categories_count' => $itinerary->categories->count(),
+                'days_count' => $itinerary->days->count()
+            ]);
+
+            return view('itineraries.show', compact('itinerary'));
+        } catch (\Exception $e) {
+            \Log::error('Error in itinerary show: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'itinerary_id' => $itinerary->id ?? null,
+                'slug' => $itinerary->slug ?? null
+            ]);
+            return back()->with('error', 'An error occurred while loading the itinerary. Please try again later.');
+        }
     }
 
     /**

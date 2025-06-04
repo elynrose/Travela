@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="h4 mb-0">{{ $itinerary->title }}</h2>
+            <h2 class="h4 mb-0">{{ $itinerary->title ?? 'Untitled Itinerary' }}</h2>
             <div class="d-flex gap-2">
                 @if(auth()->check() && auth()->id() === $itinerary->user_id)
                     <a href="{{ route('itineraries.edit', $itinerary) }}" class="btn btn-outline-primary">
@@ -22,6 +22,12 @@
         </div>
     </x-slot>
 
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="container py-5">
         <div class="row">
             <div class="col-lg-8">
@@ -29,7 +35,7 @@
                 @if($itinerary->getCoverImageUrl())
                     <div class="mb-4">
                         <img src="{{ $itinerary->getCoverImageUrl() }}" 
-                             alt="{{ $itinerary->title }}" 
+                             alt="{{ $itinerary->title ?? 'Itinerary Cover' }}" 
                              class="img-fluid rounded shadow-sm w-100" 
                              style="max-height: 400px; object-fit: cover;">
                     </div>
@@ -39,75 +45,83 @@
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <h3 class="h5 mb-3">About this Itinerary</h3>
-                        <p class="text-muted">{{ $itinerary->description }}</p>
+                        <p class="text-muted">{{ $itinerary->description ?? 'No description available.' }}</p>
                     </div>
                 </div>
 
                 <!-- Highlights -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h3 class="h5 mb-3">Highlights</h3>
-                        <div class="row g-3">
-                            @foreach($itinerary->highlights as $highlight)
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                        <span>{{ $highlight }}</span>
+                @if($itinerary->highlights && count($itinerary->highlights) > 0)
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Highlights</h3>
+                            <div class="row g-3">
+                                @foreach($itinerary->highlights as $highlight)
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>{{ $highlight }}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
 
                 <!-- Included & Excluded -->
                 <div class="row g-4 mb-4">
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h3 class="h5 mb-3">What's Included</h3>
-                                <ul class="list-unstyled mb-0">
-                                    @foreach($itinerary->included_items as $item)
-                                        <li class="mb-2">
-                                            <i class="bi bi-check2 text-success me-2"></i>
-                                            {{ $item }}
-                                        </li>
-                                    @endforeach
-                                </ul>
+                    @if($itinerary->included_items && count($itinerary->included_items) > 0)
+                        <div class="col-md-6">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-3">What's Included</h3>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach($itinerary->included_items as $item)
+                                            <li class="mb-2">
+                                                <i class="bi bi-check2 text-success me-2"></i>
+                                                {{ $item }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h3 class="h5 mb-3">What's Not Included</h3>
-                                <ul class="list-unstyled mb-0">
-                                    @foreach($itinerary->excluded_items as $item)
-                                        <li class="mb-2">
-                                            <i class="bi bi-x text-danger me-2"></i>
-                                            {{ $item }}
-                                        </li>
-                                    @endforeach
-                                </ul>
+                    @endif
+                    @if($itinerary->excluded_items && count($itinerary->excluded_items) > 0)
+                        <div class="col-md-6">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-3">What's Not Included</h3>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach($itinerary->excluded_items as $item)
+                                            <li class="mb-2">
+                                                <i class="bi bi-x text-danger me-2"></i>
+                                                {{ $item }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 <!-- Requirements -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h3 class="h5 mb-3">Requirements</h3>
-                        <ul class="list-unstyled mb-0">
-                            @foreach($itinerary->requirements as $requirement)
-                                <li class="mb-2">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    {{ $requirement }}
-                                </li>
-                            @endforeach
-                        </ul>
+                @if($itinerary->requirements && count($itinerary->requirements) > 0)
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Requirements</h3>
+                            <ul class="list-unstyled mb-0">
+                                @foreach($itinerary->requirements as $requirement)
+                                    <li class="mb-2">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        {{ $requirement }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
-                </div>
+                @endif
 
                 <!-- Gallery -->
                 @if($itinerary->gallery && count($itinerary->gallery) > 0)
@@ -133,7 +147,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="h5 mb-0">Book this Itinerary</h3>
-                            <span class="h4 mb-0">${{ number_format($itinerary->price, 2) }}</span>
+                            <span class="h4 mb-0">${{ number_format($itinerary->price ?? 0, 2) }}</span>
                         </div>
 
                         <div class="mb-4">
@@ -143,11 +157,11 @@
                             </div>
                             <div class="d-flex align-items-center mb-2">
                                 <i class="bi bi-geo-alt me-2"></i>
-                                <span>{{ $itinerary->location }}, {{ $itinerary->country }}</span>
+                                <span>{{ $itinerary->location ?? 'Location not specified' }}, {{ $itinerary->country ?? 'Country not specified' }}</span>
                             </div>
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-person me-2"></i>
-                                <span>Created by {{ $itinerary->user->name }}</span>
+                                <span>Created by {{ $itinerary->user->name ?? 'Unknown User' }}</span>
                             </div>
                         </div>
 
@@ -180,22 +194,24 @@
                 </div>
 
                 <!-- Categories -->
-                <div class="card shadow-sm mt-4">
-                    <div class="card-body">
-                        <h3 class="h5 mb-3">Categories</h3>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach($itinerary->categories as $category)
-                                <a href="{{ route('categories.show', $category) }}" class="badge bg-light text-dark text-decoration-none">
-                                    {{ $category->name }}
-                                </a>
-                            @endforeach
+                @if($itinerary->categories && count($itinerary->categories) > 0)
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3">Categories</h3>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($itinerary->categories as $category)
+                                    <a href="{{ route('categories.show', $category) }}" class="badge bg-light text-dark text-decoration-none">
+                                        {{ $category->name }}
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
 
                 <!-- Contact Host -->
                 @auth
-                    @if(auth()->id() !== $itinerary->user_id)
+                    @if(auth()->id() !== $itinerary->user_id && $itinerary->user)
                         <div class="card shadow-sm mt-4">
                             <div class="card-body">
                                 <h3 class="h5 mb-3">Contact Host</h3>
