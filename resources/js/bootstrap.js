@@ -10,12 +10,12 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY || process.env.MIX_PUSHER_APP_KEY || '1ede2f91f0858d2a7185',
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || process.env.MIX_PUSHER_APP_CLUSTER || 'us2',
-    wsHost: import.meta.env.VITE_PUSHER_HOST || process.env.MIX_PUSHER_HOST || 'ws-us2.pusher.com',
-    wsPort: import.meta.env.VITE_PUSHER_PORT || process.env.MIX_PUSHER_PORT || 443,
-    wssPort: import.meta.env.VITE_PUSHER_PORT || process.env.MIX_PUSHER_PORT || 443,
-    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME || process.env.MIX_PUSHER_SCHEME || 'https') === 'https',
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    wsHost: import.meta.env.VITE_PUSHER_HOST || 'ws-us2.pusher.com',
+    wsPort: import.meta.env.VITE_PUSHER_PORT || 443,
+    wssPort: import.meta.env.VITE_PUSHER_PORT || 443,
+    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME || 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
     authEndpoint: '/broadcasting/auth',
     auth: {

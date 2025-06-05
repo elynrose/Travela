@@ -16,9 +16,23 @@
                         <div class="card-body d-flex flex-column p-0">
                             <!-- Messages -->
                             <div class="messages-container flex-grow-1 p-3" style="overflow-y: auto; height: calc(100vh - 260px);">
+                                @php
+                                    $bubbleColors = [
+                                        'bg-primary text-white',      // Blue
+                                        'bg-success text-white',      // Green
+                                        'bg-warning text-dark',       // Yellow
+                                        'bg-danger text-white',       // Red
+                                        'bg-info text-dark',          // Light blue
+                                        'bg-secondary text-white',    // Gray
+                                        'bg-dark text-white',         // Black
+                                    ];
+                                @endphp
                                 @forelse($messages->reverse() as $message)
+                                    @php
+                                        $colorClass = $bubbleColors[$message->sender_id % count($bubbleColors)];
+                                    @endphp
                                     <div class="message mb-3 {{ $message->sender_id === auth()->id() ? 'text-end' : '' }}">
-                                        <div class="message-content d-inline-block p-3 rounded {{ $message->sender_id === auth()->id() ? 'bg-primary text-white' : 'bg-light' }}" style="max-width: 75%;">
+                                        <div class="message-content d-inline-block p-3 rounded {{ $colorClass }}" style="max-width: 75%;">
                                             <p class="mb-1">{{ $message->message }}</p>
                                             <small class="{{ $message->sender_id === auth()->id() ? 'text-white-50' : 'text-muted' }}">
                                                 {{ $message->created_at->format('M d, Y H:i') }}
