@@ -712,57 +712,55 @@ class ItineraryController extends Controller
 
                 $file = $request->file('cover_image');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                
+                $originalPath = 'covers/' . $filename;
+                $originalFullPath = storage_path('app/public/' . $originalPath);
+                $thumbPath = 'covers/thumbnails/' . $filename;
+                $thumbFullPath = storage_path('app/public/' . $thumbPath);
+                $fileSaved = false;
+
                 try {
                     // Create image instance using the image manager
                     $image = $this->imageManager->read($file);
-                    
-                    // Save original image
-                    $originalPath = 'covers/' . $filename;
-                    $originalFullPath = storage_path('app/public/' . $originalPath);
-                    
-                    \Log::info('Saving original image', [
-                        'path' => $originalFullPath
-                    ]);
-                    
+
                     // Ensure directory exists
                     if (!file_exists(dirname($originalFullPath))) {
                         mkdir(dirname($originalFullPath), 0755, true);
                     }
-                    
-                    // Save the image
-                    $image->save($originalFullPath);
-                    
-                    // Create and save thumbnail
-                    $thumbPath = 'covers/thumbnails/' . $filename;
-                    $thumbFullPath = storage_path('app/public/' . $thumbPath);
-                    
-                    \Log::info('Saving thumbnail', [
-                        'path' => $thumbFullPath
-                    ]);
-                    
-                    // Ensure thumbnail directory exists
                     if (!file_exists(dirname($thumbFullPath))) {
                         mkdir(dirname($thumbFullPath), 0755, true);
                     }
-                    
-                    // Create and save the thumbnail
+
+                    // Save the image
+                    $image->save($originalFullPath);
+                    // Save the thumbnail
                     $image->cover(800, 400)->save($thumbFullPath);
 
-                    // Update the cover_image field in the database
-                    $validated['cover_image'] = $originalPath;
-
-                    \Log::info('Cover image saved successfully', [
-                        'original_path' => $originalPath,
-                        'thumb_path' => $thumbPath,
-                        'db_path' => $validated['cover_image']
-                    ]);
+                    // Check if file was actually saved
+                    if (file_exists($originalFullPath)) {
+                        $validated['cover_image'] = $originalPath;
+                        $fileSaved = true;
+                        \Log::info('Cover image saved successfully', [
+                            'original_path' => $originalPath,
+                            'thumb_path' => $thumbPath,
+                            'db_path' => $validated['cover_image']
+                        ]);
+                    } else {
+                        \Log::warning('Cover image file does not exist after save', [
+                            'expected_path' => $originalFullPath
+                        ]);
+                    }
                 } catch (\Exception $e) {
                     \Log::error('Error processing image', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
                     throw $e;
+                }
+
+                // If file was not saved, return with error
+                if (!$fileSaved) {
+                    DB::rollBack();
+                    return back()->with('error', 'Failed to upload cover image. Please try again or contact support.');
                 }
             }
 
