@@ -315,20 +315,36 @@ class ItineraryController extends Controller
         try {
             \Log::info('Starting itinerary show method', [
                 'itinerary_id' => $itinerary->id,
-                'slug' => $itinerary->slug
+                'slug' => $itinerary->slug,
+                'title' => $itinerary->title
             ]);
 
             $this->authorize('view', $itinerary);
             
             \Log::info('Authorization passed');
             
-            $itinerary->load(['user', 'categories', 'days']);
-            
-            \Log::info('Relationships loaded', [
-                'has_user' => $itinerary->user ? true : false,
-                'categories_count' => $itinerary->categories->count(),
-                'days_count' => $itinerary->days->count()
-            ]);
+            // Load relationships with error handling
+            try {
+                $itinerary->load(['user', 'categories', 'days']);
+                \Log::info('Relationships loaded successfully', [
+                    'has_user' => $itinerary->user ? true : false,
+                    'categories_count' => $itinerary->categories->count(),
+                    'days_count' => $itinerary->days->count()
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Error loading relationships: ' . $e->getMessage(), [
+                    'exception' => $e,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                // Continue without the relationships rather than failing completely
+            }
+
+            // Verify critical data
+            if (!$itinerary->user) {
+                \Log::warning('Itinerary has no associated user', [
+                    'itinerary_id' => $itinerary->id
+                ]);
+            }
 
             return view('itineraries.show', compact('itinerary'));
         } catch (\Exception $e) {
@@ -336,7 +352,9 @@ class ItineraryController extends Controller
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
                 'itinerary_id' => $itinerary->id ?? null,
-                'slug' => $itinerary->slug ?? null
+                'slug' => $itinerary->slug ?? null,
+                'request_url' => request()->url(),
+                'request_method' => request()->method()
             ]);
             return back()->with('error', 'An error occurred while loading the itinerary. Please try again later.');
         }
