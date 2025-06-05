@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
+use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
@@ -69,6 +70,9 @@ class MessageController extends Controller
             'receiver_id' => $validated['receiver_id'],
             'message' => $validated['message'],
         ]);
+
+        // Broadcast the message to the receiver
+        broadcast(new MessageSent($message, $validated['receiver_id']))->toOthers();
 
         return redirect()->back()->with('success', 'Message sent successfully.');
     }

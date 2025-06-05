@@ -61,17 +61,66 @@
 
     @push('scripts')
     <script>
-        // Scroll to bottom of messages container
         document.addEventListener('DOMContentLoaded', function() {
+            // Scroll to bottom of messages container
             const container = document.querySelector('.messages-container');
-            container.scrollTop = container.scrollHeight;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
 
             // Auto-resize textarea
             const textarea = document.querySelector('textarea[name="message"]');
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
+            if (textarea) {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+            }
+
+            // Real-time chat: Listen for new messages
+            @if(Auth::check())
+            window.Echo.private('messages.{{ Auth::id() }}')
+                .listen('.message.sent', (e) => {
+                    // If the message is from the current conversation partner, append it
+                    if (parseInt(e.sender_id) === {{ $user->id }}) {
+                        const msgHtml = `
+                            <div class="message mb-3">
+                                <div class="message-content d-inline-block p-3 rounded bg-light" style="max-width: 75%;">
+                                    <p class="mb-1">${e.message}</p>
+                                    <small class="text-muted">${e.created_at}</small>
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', msgHtml);
+                        container.scrollTop = container.scrollHeight;
+                    } else {
+                        // Show a toast notification for messages from other users
+                        showToast(`${e.sender_name}: ${e.message}`);
+                    }
+                });
+
+            // Simple toast notification
+            function showToast(message) {
+                let toast = document.getElementById('live-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'live-toast';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '30px';
+                    toast.style.right = '30px';
+                    toast.style.background = '#333';
+                    toast.style.color = '#fff';
+                    toast.style.padding = '16px 24px';
+                    toast.style.borderRadius = '8px';
+                    toast.style.zIndex = 9999;
+                    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 4000);
+            }
+            @endif
         });
     </script>
     @endpush
