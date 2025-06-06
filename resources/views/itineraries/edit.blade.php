@@ -478,7 +478,6 @@
         $(document).ready(function() {
             $('.delete-gallery-image').on('click', function() {
                 const image = $(this).data('image');
-                console.log('Deleting gallery image:', image);
                 if (confirm('Are you sure you want to delete this image?')) {
                     $.ajax({
                         url: '{{ route('itineraries.gallery.delete', $itinerary->id) }}?image=' + image,
@@ -488,104 +487,15 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            console.log('Gallery image deleted successfully:', response);
                             alert('Gallery image deleted successfully.');
                             location.reload();
                         },
                         error: function(xhr) {
-                            console.error('Failed to delete gallery image:', xhr.responseText);
                             alert('Failed to delete gallery image.');
                         }
                     });
                 }
             });
-        });
-
-        document.getElementById('cover_image').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const formData = new FormData();
-                formData.append('cover_image', e.target.files[0]);
-                formData.append('_token', '{{ csrf_token() }}');
-
-                // Show loading state
-                const img = document.querySelector('.position-relative img');
-                if (img) {
-                    img.style.opacity = '0.5';
-                }
-
-                // Add loading indicator
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'position-absolute top-50 start-50 translate-middle';
-                loadingDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-                document.querySelector('.position-relative').appendChild(loadingDiv);
-
-                fetch('{{ route('itineraries.uploadCoverImage', $itinerary) }}', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Update the image
-                        const img = document.querySelector('.position-relative img');
-                        if (img) {
-                            img.src = data.cover_image_url;
-                            img.style.opacity = '1';
-                        } else {
-                            // If no image exists, create one
-                            const newImg = document.createElement('img');
-                            newImg.src = data.cover_image_url;
-                            newImg.alt = 'Cover image';
-                            newImg.className = 'img-fluid w-100';
-                            newImg.style.maxHeight = '300px';
-                            newImg.style.objectFit = 'cover';
-                            document.querySelector('.position-relative').prepend(newImg);
-                        }
-                        // Show success message
-                        const alertDiv = document.createElement('div');
-                        alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
-                        alertDiv.innerHTML = `
-                            Cover image updated successfully
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        `;
-                        document.body.appendChild(alertDiv);
-                        setTimeout(() => alertDiv.remove(), 3000);
-                    } else {
-                        throw new Error(data.message || 'Upload failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Show detailed error message
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
-                    alertDiv.innerHTML = `
-                        Upload failed: ${error.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    document.body.appendChild(alertDiv);
-                    setTimeout(() => alertDiv.remove(), 5000);
-                })
-                .finally(() => {
-                    // Remove loading indicator
-                    const loadingDiv = document.querySelector('.position-relative .spinner-border');
-                    if (loadingDiv) {
-                        loadingDiv.parentElement.remove();
-                    }
-                    // Reset opacity
-                    const img = document.querySelector('.position-relative img');
-                    if (img) {
-                        img.style.opacity = '1';
-                    }
-                });
-            }
         });
     </script>
     @endpush
