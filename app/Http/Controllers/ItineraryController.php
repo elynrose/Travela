@@ -667,28 +667,7 @@ class ItineraryController extends Controller
      */
     public function update(Request $request, Itinerary $itinerary)
     {
-        \Log::info('Starting itinerary update', [
-            'has_file' => $request->hasFile('cover_image'),
-            'all_data' => $request->all()
-        ]);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'location' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'duration_days' => 'required|integer|min:1',
-            'highlights' => 'required|array|min:1',
-            'highlights.*' => 'required|string|max:255',
-            'included_items' => 'required|array|min:1',
-            'included_items.*' => 'required|string|max:255',
-            'excluded_items' => 'required|array|min:1',
-            'excluded_items.*' => 'required|string|max:255',
-            'requirements' => 'required|array|min:1',
-            'requirements.*' => 'required|string|max:255',
-        ]);
+        $this->authorize('update', $itinerary);
 
         try {
             DB::beginTransaction();
@@ -698,7 +677,13 @@ class ItineraryController extends Controller
                 \Log::info('Processing cover image upload', [
                     'original_name' => $request->file('cover_image')->getClientOriginalName(),
                     'mime_type' => $request->file('cover_image')->getMimeType(),
-                    'size' => $request->file('cover_image')->getSize()
+                    'size' => $request->file('cover_image')->getSize(),
+                    'is_valid' => $request->file('cover_image')->isValid()
+                ]);
+
+                // Validate the image
+                $request->validate([
+                    'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
                 ]);
 
                 // Delete old cover image if exists
@@ -706,104 +691,127 @@ class ItineraryController extends Controller
                     \Log::info('Deleting old cover image', [
                         'old_path' => $itinerary->cover_image
                     ]);
-                    Storage::disk('public')->delete($itinerary->cover_image);
-                    Storage::disk('public')->delete(str_replace('covers/', 'covers/thumbnails/', $itinerary->cover_image));
+                    try {
+                        Storage::disk('public')->delete($itinerary->cover_image);
+                        Storage::disk('public')->delete(str_replace('covers/', 'covers/thumbnails/', $itinerary->cover_image));
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete old cover image', [
+                            'error' => $e->getMessage(),
+                            'path' => $itinerary->cover_image
+                        ]);
+                    }
                 }
 
-                $file = $request->file('cover_image');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                
                 try {
-                    // Create image instance using the image manager
-                    $image = $this->imageManager->read($file);
+                    // Save new cover image
+                    $path = $request->file('cover_image')->store('covers', 'public');
                     
-                    // Save original image
-                    $originalPath = 'covers/' . $filename;
-                    $originalFullPath = storage_path('app/public/' . $originalPath);
-                    
-                    \Log::info('Saving original image', [
-                        'path' => $originalFullPath
-                    ]);
-                    
-                    // Ensure directory exists
-                    if (!file_exists(dirname($originalFullPath))) {
-                        mkdir(dirname($originalFullPath), 0755, true);
+                    if (!$path) {
+                        throw new \Exception('Failed to store the image file');
                     }
-                    
-                    // Save the image
-                    $image->save($originalFullPath);
-                    
-                    // Create and save thumbnail
-                    $thumbPath = 'covers/thumbnails/' . $filename;
-                    $thumbFullPath = storage_path('app/public/' . $thumbPath);
-                    
-                    \Log::info('Saving thumbnail', [
-                        'path' => $thumbFullPath
-                    ]);
-                    
-                    // Ensure thumbnail directory exists
-                    if (!file_exists(dirname($thumbFullPath))) {
-                        mkdir(dirname($thumbFullPath), 0755, true);
-                    }
-                    
-                    // Create and save the thumbnail
-                    $image->cover(800, 400)->save($thumbFullPath);
 
-                    // Update the cover_image field in the database
-                    $validated['cover_image'] = $originalPath;
+                    // Verify the file exists
+                    if (!Storage::disk('public')->exists($path)) {
+                        throw new \Exception('File was not saved correctly');
+                    }
+
+                    $itinerary->cover_image = $path;
+                    $itinerary->save();
 
                     \Log::info('Cover image saved successfully', [
-                        'original_path' => $originalPath,
-                        'thumb_path' => $thumbPath,
-                        'db_path' => $validated['cover_image']
+                        'new_path' => $path,
+                        'file_exists' => Storage::disk('public')->exists($path)
                     ]);
+
+                    // If this is an AJAX request, return JSON response
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => true,
+                            'cover_image_url' => Storage::url($path),
+                            'message' => 'Cover image updated successfully'
+                        ]);
+                    }
                 } catch (\Exception $e) {
-                    \Log::error('Error processing image', [
+                    \Log::error('Error saving cover image', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
-                    throw $e;
+                    throw new \Exception('Failed to save cover image: ' . $e->getMessage());
                 }
             }
 
-            // Handle gallery uploads
-            if ($request->hasFile('gallery')) {
-                \Log::info('Processing gallery uploads in update', ['count' => count($request->file('gallery'))]);
-                $gallery = $itinerary->gallery ?? [];
-                foreach ($request->file('gallery') as $image) {
-                    \Log::info('Processing gallery image', [
-                        'name' => $image->getClientOriginalName(),
-                        'size' => $image->getSize(),
-                        'mime' => $image->getMimeType()
-                    ]);
-                    $filename = time() . '_' . $image->getClientOriginalName();
-                    $path = $image->store('gallery', 'public');
-                    $gallery[] = $path;
-                    \Log::info('Gallery image saved', ['path' => $path]);
-                }
-                \Log::info('Updating itinerary with gallery', ['gallery' => $gallery]);
-                $itinerary->update(['gallery' => $gallery]);
-            }
+            // Update other fields
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'location' => 'required|string|max:255',
+                'country' => 'required|string|max:255',
+                'price' => 'required|numeric|min:0',
+                'duration_days' => 'required|integer|min:1',
+                'categories' => 'required|array',
+                'categories.*' => 'exists:categories,id',
+                'highlights' => 'array',
+                'highlights.*' => 'string',
+                'included_items' => 'array',
+                'included_items.*' => 'string',
+                'excluded_items' => 'array',
+                'excluded_items.*' => 'string',
+                'requirements' => 'array',
+                'requirements.*' => 'string',
+                'transportation_type' => 'required|in:flight,road,both',
+                'flight_duration' => 'nullable|string',
+                'airfare_min' => 'nullable|numeric|min:0',
+                'airfare_max' => 'nullable|numeric|min:0',
+                'booking_website' => 'nullable|url',
+                'road_distance' => 'nullable|string',
+                'road_duration' => 'nullable|string',
+                'road_type' => 'nullable|in:highway,local,mixed',
+                'languages' => 'nullable|string',
+                'peak_travel_times' => 'nullable|string',
+                'travel_agency' => 'nullable|string',
+                'agency_fees' => 'nullable|numeric|min:0',
+                'travel_notes' => 'nullable|string',
+                'is_published' => 'boolean'
+            ]);
 
-            // Update the itinerary
             $itinerary->update($validated);
+
+            // Sync categories
+            $itinerary->categories()->sync($request->categories);
 
             DB::commit();
 
             \Log::info('Itinerary updated successfully', [
-                'itinerary_id' => $itinerary->id,
-                'cover_image' => $itinerary->cover_image
+                'itinerary_id' => $itinerary->id
             ]);
+
+            // If this is an AJAX request, return JSON response
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Itinerary updated successfully'
+                ]);
+            }
 
             return redirect()->route('itineraries.show', $itinerary)
                 ->with('success', 'Itinerary updated successfully.');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Itinerary update failed', [
+            \Log::error('Error updating itinerary', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'itinerary_id' => $itinerary->id
             ]);
-            return back()->with('error', 'Failed to update itinerary: ' . $e->getMessage());
+
+            // If this is an AJAX request, return JSON response
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating itinerary: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Error updating itinerary. Please try again.');
         }
     }
 
@@ -945,5 +953,30 @@ class ItineraryController extends Controller
 
         return redirect()->route('itineraries.edit', $newItinerary)
             ->with('success', 'Itinerary copied successfully! You can now edit your version.');
+    }
+
+    public function uploadCoverImage(Request $request, Itinerary $itinerary)
+    {
+        $this->authorize('update', $itinerary);
+
+        $request->validate([
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        // Delete old cover image if exists
+        if ($itinerary->cover_image) {
+            Storage::disk('public')->delete($itinerary->cover_image);
+            Storage::disk('public')->delete(str_replace('covers/', 'covers/thumbnails/', $itinerary->cover_image));
+        }
+
+        $path = $request->file('cover_image')->store('covers', 'public');
+        $itinerary->cover_image = $path;
+        $itinerary->save();
+
+        return response()->json([
+            'success' => true,
+            'cover_image_url' => Storage::url($path),
+            'message' => 'Cover image updated successfully'
+        ]);
     }
 }
