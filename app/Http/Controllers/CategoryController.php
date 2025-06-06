@@ -33,9 +33,14 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($slug)
     {
-        //
+        $category = \App\Models\Category::where('slug', $slug)
+            ->with(['itineraries' => function($q) {
+                $q->with(['user', 'categories'])->where('is_published', true)->latest();
+            }])->firstOrFail();
+        $itineraries = $category->itineraries;
+        return view('categories.show', compact('category', 'itineraries'));
     }
 
     /**

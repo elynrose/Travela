@@ -13,16 +13,10 @@ use App\Http\Controllers\ReceivedOrdersController;
 use App\Models\Order;
 
 Route::get('/', function () {
-    $featuredItineraries = \App\Models\Itinerary::with(['user', 'categories'])
-        ->where('is_published', true)
-        ->where('is_featured', true)
-        ->latest()
-        ->take(6)
-        ->get();
-
-    $categories = \App\Models\Category::where('is_active', true)->get();
-
-    return view('welcome', compact('featuredItineraries', 'categories'));
+    if (auth()->check()) {
+        return redirect()->route('itineraries.index');
+    }
+    return view('welcome');
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
