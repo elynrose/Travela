@@ -252,17 +252,52 @@ class ItineraryController extends Controller
             // Handle gallery uploads
             if ($request->hasFile('gallery')) {
                 \Log::info('Processing gallery uploads', ['count' => count($request->file('gallery'))]);
-                $gallery = [];
+                
+                // Validate each gallery image
+                $request->validate([
+                    'gallery.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                ], [
+                    'gallery.*.image' => 'Each file must be an image.',
+                    'gallery.*.mimes' => 'Each image must be a JPEG, PNG, JPG, or GIF.',
+                    'gallery.*.max' => 'Each image must not exceed 2MB.'
+                ]);
+
+                $gallery = $itinerary->gallery ?? [];
                 foreach ($request->file('gallery') as $image) {
-                    \Log::info('Processing gallery image', [
-                        'name' => $image->getClientOriginalName(),
-                        'size' => $image->getSize(),
-                        'mime' => $image->getMimeType()
-                    ]);
-                    $filename = time() . '_' . $image->getClientOriginalName();
-                    $path = $image->store('gallery', 'public');
-                    $gallery[] = $path;
-                    \Log::info('Gallery image saved', ['path' => $path]);
+                    try {
+                        \Log::info('Processing gallery image', [
+                            'name' => $image->getClientOriginalName(),
+                            'size' => $image->getSize(),
+                            'mime' => $image->getMimeType()
+                        ]);
+
+                        // Validate file size
+                        if ($image->getSize() > 2048 * 1024) {
+                            throw new \Exception('Image size exceeds 2MB limit: ' . $image->getClientOriginalName());
+                        }
+
+                        // Validate mime type
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                        if (!in_array($image->getMimeType(), $allowedMimes)) {
+                            throw new \Exception('Invalid file type: ' . $image->getClientOriginalName());
+                        }
+
+                        $filename = time() . '_' . $image->getClientOriginalName();
+                        $path = $image->store('gallery', 'public');
+                        
+                        if (!$path) {
+                            throw new \Exception('Failed to store image: ' . $image->getClientOriginalName());
+                        }
+
+                        $gallery[] = $path;
+                        \Log::info('Gallery image saved', ['path' => $path]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error processing gallery image', [
+                            'error' => $e->getMessage(),
+                            'file' => $image->getClientOriginalName()
+                        ]);
+                        throw new \Exception('Failed to upload gallery image: ' . $e->getMessage());
+                    }
                 }
                 \Log::info('Updating itinerary with gallery', ['gallery' => $gallery]);
                 $itinerary->update(['gallery' => $gallery]);
@@ -740,6 +775,60 @@ class ItineraryController extends Controller
                 }
             }
 
+            // Handle gallery uploads
+            if ($request->hasFile('gallery')) {
+                \Log::info('Processing gallery uploads', ['count' => count($request->file('gallery'))]);
+                
+                // Validate each gallery image
+                $request->validate([
+                    'gallery.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                ], [
+                    'gallery.*.image' => 'Each file must be an image.',
+                    'gallery.*.mimes' => 'Each image must be a JPEG, PNG, JPG, or GIF.',
+                    'gallery.*.max' => 'Each image must not exceed 2MB.'
+                ]);
+
+                $gallery = $itinerary->gallery ?? [];
+                foreach ($request->file('gallery') as $image) {
+                    try {
+                        \Log::info('Processing gallery image', [
+                            'name' => $image->getClientOriginalName(),
+                            'size' => $image->getSize(),
+                            'mime' => $image->getMimeType()
+                        ]);
+
+                        // Validate file size
+                        if ($image->getSize() > 2048 * 1024) {
+                            throw new \Exception('Image size exceeds 2MB limit: ' . $image->getClientOriginalName());
+                        }
+
+                        // Validate mime type
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                        if (!in_array($image->getMimeType(), $allowedMimes)) {
+                            throw new \Exception('Invalid file type: ' . $image->getClientOriginalName());
+                        }
+
+                        $filename = time() . '_' . $image->getClientOriginalName();
+                        $path = $image->store('gallery', 'public');
+                        
+                        if (!$path) {
+                            throw new \Exception('Failed to store image: ' . $image->getClientOriginalName());
+                        }
+
+                        $gallery[] = $path;
+                        \Log::info('Gallery image saved', ['path' => $path]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error processing gallery image', [
+                            'error' => $e->getMessage(),
+                            'file' => $image->getClientOriginalName()
+                        ]);
+                        throw new \Exception('Failed to upload gallery image: ' . $e->getMessage());
+                    }
+                }
+                \Log::info('Updating itinerary with gallery', ['gallery' => $gallery]);
+                $itinerary->update(['gallery' => $gallery]);
+            }
+
             // Update other fields
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
@@ -892,32 +981,102 @@ class ItineraryController extends Controller
      */
     public function deleteGalleryImage(Request $request, Itinerary $itinerary)
     {
-        // Ensure the user is the owner
-        if (auth()->id() !== $itinerary->user_id) {
-            return redirect()->back()->with('error', 'You are not authorized to delete this image.');
+        try {
+            \Log::info('deleteGalleryImage called', [
+                'itinerary_id' => $itinerary->id,
+                'user_id' => auth()->id(),
+                'gallery' => $itinerary->gallery,
+                'query_image' => $request->query('image')
+            ]);
+
+            // Ensure the user is the owner
+            if (auth()->id() !== $itinerary->user_id) {
+                \Log::warning('Unauthorized gallery image delete attempt', [
+                    'user_id' => auth()->id(),
+                    'itinerary_id' => $itinerary->id
+                ]);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'You are not authorized to delete this image.'
+                ], 403);
+            }
+
+            $image = $request->query('image');
+            if (!$image) {
+                \Log::warning('No image specified for deletion');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No image specified for deletion.'
+                ], 400);
+            }
+
+            $gallery = $itinerary->gallery ?? [];
+            $key = array_search($image, $gallery);
+            
+            if ($key === false) {
+                \Log::warning('Image not found in gallery', [
+                    'image' => $image,
+                    'gallery' => $gallery
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image not found in gallery.'
+                ], 404);
+            }
+
+            // Remove from array
+            unset($gallery[$key]);
+            $gallery = array_values($gallery);
+
+            // Delete file from storage
+            if (\Storage::disk('public')->exists($image)) {
+                try {
+                    \Storage::disk('public')->delete($image);
+                    \Log::info('Deleted gallery image from storage', ['image' => $image]);
+                } catch (\Exception $e) {
+                    \Log::error('Error deleting gallery image from storage', [
+                        'error' => $e->getMessage(),
+                        'image' => $image
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to delete image file from storage.'
+                    ], 500);
+                }
+            } else {
+                \Log::warning('Gallery image file not found in storage', ['image' => $image]);
+            }
+
+            // Update itinerary
+            try {
+                $itinerary->gallery = $gallery;
+                $itinerary->save();
+                \Log::info('Gallery updated after deletion', ['gallery' => $gallery]);
+            } catch (\Exception $e) {
+                \Log::error('Error updating gallery in database', [
+                    'error' => $e->getMessage(),
+                    'gallery' => $gallery
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update gallery in database.'
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gallery image deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error in deleteGalleryImage', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while deleting the image.'
+            ], 500);
         }
-
-        $image = $request->query('image');
-        $gallery = $itinerary->gallery ?? [];
-        $key = array_search($image, $gallery);
-        if ($key === false) {
-            return redirect()->back()->with('error', 'Image not found in gallery.');
-        }
-
-        // Remove from array
-        unset($gallery[$key]);
-        $gallery = array_values($gallery);
-
-        // Delete file from storage
-        if (\Storage::disk('public')->exists($image)) {
-            \Storage::disk('public')->delete($image);
-        }
-
-        // Update itinerary
-        $itinerary->gallery = $gallery;
-        $itinerary->save();
-
-        return redirect()->back()->with('success', 'Gallery image deleted successfully.');
     }
 
     /**

@@ -43,10 +43,16 @@
                     <div class="col-12">
                         <div class="position-relative mb-4">
                             @if($itinerary->getCoverImageUrl())
-                                <img src="{{ $itinerary->getCoverThumbUrl() }}" 
-                                     alt="Cover image" 
-                                     class="img-fluid w-100" 
+                                <img src="{{ $itinerary->getCoverImageUrl() }}" 
+                                     alt="{{ $itinerary->title ?? 'Itinerary Cover' }}" 
+                                     class="img-fluid w-100 rounded shadow-sm" 
                                      style="max-height: 300px; object-fit: cover;">
+                            @else
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded shadow-sm" style="height: 300px;">
+                                    <svg width="64" height="64" fill="currentColor" class="bi bi-image text-muted" viewBox="0 0 16 16">
+                                        <path d="M14.002 3H2c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h12.002c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12.002a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm10.002 7.5l-2.5 3.5H2v-1l3-4 2.5 3.5 2.5-3.5 3 4v1h-3.998z"/>
+                                    </svg>
+                                </div>
                             @endif
                             <div class="position-absolute top-0 end-0 p-3">
                                 <label for="cover_image" class="btn btn-light rounded-circle">
@@ -345,8 +351,9 @@
                                                 <div class="col-md-3 position-relative">
                                                     <img src="{{ asset('storage/' . $image) }}" 
                                                          alt="Gallery image" 
-                                                         class="img-thumbnail w-100" 
-                                                         style="max-height: 150px; object-fit: cover;">
+                                                         class="img-thumbnail w-100 gallery-image-preview" 
+                                                         style="max-height: 150px; object-fit: cover; cursor: pointer;"
+                                                         data-bs-toggle="modal" data-bs-target="#galleryImageModal" data-image="{{ asset('storage/' . $image) }}">
                                                     <button type="button" class="btn btn-sm btn-danger delete-gallery-image" data-image="{{ urlencode($image) }}" style="position: absolute; top: 8px; right: 8px;" title="Delete image">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -376,6 +383,21 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    {{-- Gallery Image Modal --}}
+    <div class="modal fade" id="galleryImageModal" tabindex="-1" aria-labelledby="galleryImageModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="galleryImageModalLabel">Gallery Image</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img src="" alt="Gallery Image" id="galleryImageModalImg" class="img-fluid rounded shadow-sm" style="max-height: 70vh;">
+          </div>
+        </div>
+      </div>
     </div>
 
     @push('scripts')
@@ -478,23 +500,122 @@
         $(document).ready(function() {
             $('.delete-gallery-image').on('click', function() {
                 const image = $(this).data('image');
+                const button = $(this);
+                const imageContainer = button.closest('.col-md-3');
+
                 if (confirm('Are you sure you want to delete this image?')) {
+                    // Use slug instead of ID
+                    const itinerarySlug = `{{ $itinerary->slug }}`;
+                    const url = `/itineraries/${itinerarySlug}/gallery?image=${image}`;
+                    
+                    // Show loading state
+                    button.prop('disabled', true);
+                    button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                    
                     $.ajax({
-                        url: '{{ route('itineraries.gallery.delete', $itinerary->id) }}?image=' + image,
+                        url: url,
                         type: 'POST',
                         data: {
                             _method: 'DELETE',
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            alert('Gallery image deleted successfully.');
-                            location.reload();
+                            if (response.success) {
+                                // Show success message
+                                const alertDiv = $('<div>')
+                                    .addClass('alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3')
+                                    .html(`
+                                        ${response.message}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    `);
+                                $('body').append(alertDiv);
+                                setTimeout(() => alertDiv.remove(), 3000);
+
+                                // Remove the image container with a fade effect
+                                imageContainer.fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                            } else {
+                                throw new Error(response.message || 'Failed to delete image');
+                            }
                         },
                         error: function(xhr) {
-                            alert('Failed to delete gallery image.');
+                            console.error('Delete error:', xhr.status, xhr.responseText);
+                            let errorMessage = 'Failed to delete gallery image.';
+                            
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                console.error('Error parsing error response:', e);
+                            }
+
+                            // Show error message
+                            const alertDiv = $('<div>')
+                                .addClass('alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3')
+                                .html(`
+                                    ${errorMessage}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                `);
+                            $('body').append(alertDiv);
+                            setTimeout(() => alertDiv.remove(), 5000);
+                        },
+                        complete: function() {
+                            // Reset button state
+                            button.prop('disabled', false);
+                            button.html('<i class="bi bi-trash"></i>');
                         }
                     });
                 }
+            });
+
+            // Handle gallery upload errors
+            $('#gallery').on('change', function(e) {
+                const files = e.target.files;
+                let hasError = false;
+                let errorMessage = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Check file size (2MB limit)
+                    if (file.size > 2 * 1024 * 1024) {
+                        errorMessage = `File "${file.name}" exceeds 2MB size limit.`;
+                        hasError = true;
+                        break;
+                    }
+
+                    // Check file type
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        errorMessage = `File "${file.name}" is not a valid image type. Allowed types: JPEG, PNG, JPG, GIF.`;
+                        hasError = true;
+                        break;
+                    }
+                }
+
+                if (hasError) {
+                    // Show error message
+                    const alertDiv = $('<div>')
+                        .addClass('alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3')
+                        .html(`
+                            ${errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `);
+                    $('body').append(alertDiv);
+                    setTimeout(() => alertDiv.remove(), 5000);
+
+                    // Clear the file input
+                    $(this).val('');
+                }
+            });
+
+            // Gallery image modal preview
+            $(document).on('click', '.gallery-image-preview', function() {
+                const imgSrc = $(this).data('image');
+                $('#galleryImageModalImg').attr('src', imgSrc);
             });
         });
 
