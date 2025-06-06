@@ -1,27 +1,29 @@
 <x-admin-layout>
-    <x-slot:header>
-        Orders
+    <x-slot name="header">
+        Orders Management
     </x-slot>
-
     <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Orders</h5>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Order #</th>
+                            <th>ID</th>
                             <th>User</th>
                             <th>Itinerary</th>
                             <th>Amount</th>
                             <th>Status</th>
-                            <th>Date</th>
+                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($orders as $order)
                             <tr>
-                                <td>{{ $order->order_number }}</td>
+                                <td>{{ $order->id }}</td>
                                 <td>{{ $order->user->name }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">

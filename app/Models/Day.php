@@ -78,4 +78,9 @@ class Day extends Model
             ];
         });
     }
+
+    public function getAccommodationGeocodingStatusAttribute()
+    {
+        return ($this->accommodation_latitude && $this->accommodation_longitude) ? 'Geocoded' : 'Pending';
+    }
 }

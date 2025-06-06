@@ -1,45 +1,36 @@
 <x-admin-layout>
-    <x-slot:header>
+    <x-slot name="header">
         Payout Requests
     </x-slot>
-
     <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Payout Requests</h5>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>User</th>
                             <th>Amount</th>
                             <th>Status</th>
                             <th>Requested</th>
-                            <th>Processed</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($payouts as $payout)
+                        @foreach($payouts as $payout)
                             <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        @if($payout->user->avatar)
-                                            <img src="{{ Storage::url($payout->user->avatar) }}" alt="{{ $payout->user->name }}" class="rounded-circle me-2" style="width: 32px; height: 32px;">
-                                        @else
-                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                                                <i class="bi bi-person text-primary"></i>
-                                            </div>
-                                        @endif
-                                        {{ $payout->user->name }}
-                                    </div>
-                                </td>
+                                <td>{{ $payout->id }}</td>
+                                <td>{{ $payout->user->name }}</td>
                                 <td>${{ number_format($payout->amount, 2) }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $payout->status === 'approved' ? 'success' : ($payout->status === 'rejected' ? 'danger' : 'warning') }}">
+                                    <span class="badge bg-{{ $payout->status === 'pending' ? 'warning' : ($payout->status === 'approved' ? 'success' : 'danger') }}">
                                         {{ ucfirst($payout->status) }}
                                     </span>
                                 </td>
                                 <td>{{ $payout->created_at->format('M d, Y') }}</td>
-                                <td>{{ $payout->processed_at ? $payout->processed_at->format('M d, Y') : '-' }}</td>
                                 <td>
                                     @if($payout->status === 'pending')
                                         <form action="{{ route('admin.payouts.approve', $payout) }}" method="POST" class="d-inline">
@@ -54,18 +45,15 @@
                                                 <i class="bi bi-x-lg"></i> Reject
                                             </button>
                                         </form>
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">No payout requests found</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-
             <div class="mt-4">
                 {{ $payouts->links() }}
             </div>

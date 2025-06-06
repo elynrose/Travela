@@ -13,14 +13,19 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\DB;
 use Intervention\Image\Facades\Image;
+use App\Services\GeocodingService;
+use App\Jobs\GeocodeItineraryJob;
+use App\Jobs\GeocodeDayJob;
 
 class ItineraryController extends Controller
 {
     protected $imageManager;
+    protected $geocodingService;
 
-    public function __construct()
+    public function __construct(GeocodingService $geocodingService)
     {
         $this->imageManager = new ImageManager(new Driver());
+        $this->geocodingService = $geocodingService;
     }
 
     /**
@@ -322,6 +327,9 @@ class ItineraryController extends Controller
                 'has_gallery' => !empty($itinerary->gallery)
             ]);
 
+            // Dispatch geocoding job
+            dispatch(new GeocodeItineraryJob($itinerary->id));
+
             return redirect()->route('itineraries.show', $itinerary)
                 ->with('success', 'Itinerary created successfully.');
         } catch (\Exception $e) {
@@ -502,18 +510,37 @@ class ItineraryController extends Controller
                 $activities = [];
                 $receipts = $day->receipts ?? [];
 
+                // Get coordinates for accommodation if address is provided
+                if (!empty($dayData['accommodation_address'])) {
+                    $accommodationCoords = $this->geocodingService->getCoordinates(
+                        $dayData['accommodation'],
+                        $itinerary->country
+                    );
+                }
+
                 // Update meal data
                 if (isset($dayData['meals'])) {
                     foreach ($dayData['meals'] as $mealType => $mealData) {
                         // Preserve existing meal data
                         $existingMeal = $meals[$mealType] ?? [];
                         
+                        // Get coordinates for meal location if address is provided
+                        $mealCoords = null;
+                        if (!empty($mealData['address'])) {
+                            $mealCoords = $this->geocodingService->getCoordinates(
+                                $mealData['name'],
+                                $itinerary->country
+                            );
+                        }
+                        
                         // Update meal info
                         $meals[$mealType] = array_merge($existingMeal, [
                             'name' => $mealData['name'] ?? $existingMeal['name'] ?? null,
                             'address' => $mealData['address'] ?? $existingMeal['address'] ?? null,
                             'description' => $mealData['description'] ?? $existingMeal['description'] ?? null,
-                            'photos' => $existingMeal['photos'] ?? []
+                            'photos' => $existingMeal['photos'] ?? [],
+                            'latitude' => $mealCoords['latitude'] ?? null,
+                            'longitude' => $mealCoords['longitude'] ?? null
                         ]);
 
                         // Handle new meal photos
@@ -556,13 +583,24 @@ class ItineraryController extends Controller
                         // Get existing activity data if it exists
                         $existingActivity = $day->activities[$activityIndex] ?? [];
                         
+                        // Get coordinates for activity location if address is provided
+                        $activityCoords = null;
+                        if (!empty($activityData['address'])) {
+                            $activityCoords = $this->geocodingService->getCoordinates(
+                                $activityData['name'],
+                                $itinerary->country
+                            );
+                        }
+                        
                         // Create new activity data
                         $activities[$activityIndex] = [
                             'name' => $activityData['name'] ?? $existingActivity['name'] ?? null,
                             'address' => $activityData['address'] ?? $existingActivity['address'] ?? null,
                             'description' => $activityData['description'] ?? $existingActivity['description'] ?? null,
                             'entry_fee' => $activityData['entry_fee'] ?? $existingActivity['entry_fee'] ?? null,
-                            'photos' => $existingActivity['photos'] ?? []
+                            'photos' => $existingActivity['photos'] ?? [],
+                            'latitude' => $activityCoords['latitude'] ?? null,
+                            'longitude' => $activityCoords['longitude'] ?? null
                         ];
 
                         // Handle new activity photos
@@ -621,11 +659,16 @@ class ItineraryController extends Controller
                 $day->update([
                     'accommodation' => $dayData['accommodation'] ?? null,
                     'accommodation_address' => $dayData['accommodation_address'] ?? null,
+                    'accommodation_latitude' => $accommodationCoords['latitude'] ?? null,
+                    'accommodation_longitude' => $accommodationCoords['longitude'] ?? null,
                     'meals' => $meals,
                     'activities' => $activities,
                     'receipts' => $receipts,
                     'notes' => $dayData['notes'] ?? null,
                 ]);
+
+                // Dispatch geocoding job for this day
+                dispatch(new GeocodeDayJob($day->id));
             }
 
             // Delete any days that are no longer in the request
@@ -898,6 +941,9 @@ class ItineraryController extends Controller
             \Log::info('Itinerary updated successfully', [
                 'itinerary_id' => $itinerary->id
             ]);
+
+            // Dispatch geocoding job
+            dispatch(new GeocodeItineraryJob($itinerary->id));
 
             // If this is an AJAX request, return JSON response
             if ($request->ajax()) {

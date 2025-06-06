@@ -29,7 +29,8 @@ class DashboardController extends Controller
         $recent_users = User::latest()->take(5)->get();
         $recent_orders = Order::with(['user', 'itinerary'])->latest()->take(5)->get();
         $pending_payouts = PayoutRequest::with('user')->where('status', 'pending')->latest()->take(5)->get();
+        $recent_itineraries = Itinerary::latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_orders', 'pending_payouts'));
+        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_orders', 'pending_payouts', 'recent_itineraries'));
     }
 }

@@ -53,11 +53,52 @@
     </div>
 
     <div class="row g-4">
-        <!-- Recent Users -->
-        <div class="col-md-6">
+        <!-- Left Column: Recent Itineraries, Recent Users -->
+        <div class="col-md-8">
+            <!-- Recent Itineraries with Geocoding Status -->
+            <div class="card mb-4">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recent Itineraries</h5>
+                    <a href="{{ route('admin.itineraries.index') }}" class="btn btn-sm btn-outline-primary">View More</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Location</th>
+                                    <th>Geocoding Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recent_itineraries as $itinerary)
+                                    <tr>
+                                        <td>{{ $itinerary->title }}</td>
+                                        <td>{{ $itinerary->location }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ $itinerary->geocoding_status == 'Geocoded' ? 'success' : 'warning' }}">
+                                                {{ $itinerary->geocoding_status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $itinerary->created_at->diffForHumans() }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center">No itineraries found</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Recent Users -->
             <div class="card">
-                <div class="card-header bg-transparent">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Recent Users</h5>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-primary">View More</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -87,12 +128,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- Recent Orders -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-transparent">
+        <!-- Right Column: Recent Orders, Pending Payouts -->
+        <div class="col-md-4">
+            <!-- Recent Orders -->
+            <div class="card mb-4">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Recent Orders</h5>
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-primary">View More</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -127,13 +169,11 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Pending Payouts -->
-        <div class="col-12">
+            <!-- Pending Payouts -->
             <div class="card">
-                <div class="card-header bg-transparent">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Pending Payouts</h5>
+                    <a href="{{ route('admin.payouts.index') }}" class="btn btn-sm btn-outline-primary">View More</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
