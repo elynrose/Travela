@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class Itinerary extends Model
 {
@@ -55,28 +54,6 @@ class Itinerary extends Model
         'is_published' => 'boolean',
         'is_featured' => 'boolean',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($itinerary) {
-            if (empty($itinerary->slug)) {
-                $itinerary->slug = Str::slug($itinerary->title) . '-' . time();
-            }
-        });
-
-        static::updating(function ($itinerary) {
-            if ($itinerary->isDirty('title') && !$itinerary->isDirty('slug')) {
-                $itinerary->slug = Str::slug($itinerary->title) . '-' . time();
-            }
-        });
-    }
-
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
 
     public function user()
     {

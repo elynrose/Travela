@@ -10,12 +10,6 @@
         </div>
     </x-slot>
 
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <div class="row g-4">
         <!-- Filters -->
         <div class="col-12">
@@ -82,7 +76,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm">
                     <div class="position-relative">
-                        @if($itinerary->cover_image && $itinerary->getCoverImageUrl())
+                        @if($itinerary->getCoverImageUrl())
                             <img src="{{ $itinerary->getCoverImageUrl() }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                         @else
                             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
@@ -111,7 +105,7 @@
                     <div class="card-footer bg-white border-top-0">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                @if($itinerary->user && $itinerary->user->getFirstMedia('avatar'))
+                                @if($itinerary->user->getFirstMedia('avatar'))
                                     <img src="{{ $itinerary->user->getAvatarThumbUrlAttribute() }}" alt="{{ $itinerary->user->name }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                 @else
                                     <div class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-light" style="width: 32px; height: 32px;">
@@ -121,7 +115,7 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <div class="small fw-bold">{{ $itinerary->user ? $itinerary->user->name : 'Unknown User' }}</div>
+                                    <div class="small fw-bold">{{ $itinerary->user->name }}</div>
                                     <div class="small text-muted">{{ $itinerary->created_at->diffForHumans() }}</div>
                                 </div>
                             </div>
