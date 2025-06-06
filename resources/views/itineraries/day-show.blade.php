@@ -135,256 +135,279 @@
     <!-- Day-by-Day Itinerary -->
     <div class="row">
         <div class="col-lg-8">
-            @foreach($days as $day)
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="h5 mb-0">Day {{ $day->day_number }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Accommodation -->
-                        @if($day->accommodation)
-                            <div class="mb-4">
-                                <h4 class="h6 text-primary mb-3">
-                                    <i class="bi bi-house-door me-2"></i>Accommodation
-                                </h4>
-                                <div class="d-flex align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1">{{ $day->accommodation }}</h5>
-                                        @if($day->accommodation_address)
-                                            <div class="mb-2">
-                                                <div class="map-container" style="height: 300px; width: 100%;">
-                                                    <iframe
-                                                        width="100%"
-                                                        height="100%"
-                                                        frameborder="0"
-                                                        style="border:0"
-                                                        src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($day->accommodation_address) }}"
-                                                        allowfullscreen>
-                                                    </iframe>
-                                                </div>
+            <ul class="nav nav-tabs mb-3" id="dayTabs" role="tablist">
+                @foreach($days as $day)
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {{ $loop->first ? 'active' : '' }}" 
+                                id="day-{{ $day->day_number }}-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#day-{{ $day->day_number }}" 
+                                type="button" 
+                                role="tab" 
+                                aria-controls="day-{{ $day->day_number }}" 
+                                aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                            Day {{ $day->day_number }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+            <div class="tab-content" id="dayTabsContent">
+                @foreach($days as $day)
+                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" 
+                         id="day-{{ $day->day_number }}" 
+                         role="tabpanel" 
+                         aria-labelledby="day-{{ $day->day_number }}-tab">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <!-- Accommodation -->
+                                @if($day->accommodation)
+                                    <div class="mb-4">
+                                        <h4 class="h6 text-primary mb-3">
+                                            <i class="bi bi-house-door me-2"></i>Accommodation
+                                        </h4>
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h5 class="mb-1">{{ $day->accommodation }}</h5>
+                                                @if($day->accommodation_address)
+                                                    <div class="mb-2">
+                                                        <a href="#" class="toggle-map-link small text-primary" data-map-id="accommodation-map-{{ $day->id }}">Show Map</a>
+                                                        <div id="accommodation-map-{{ $day->id }}" class="map-container mt-2" style="height: 300px; width: 100%; display: none;">
+                                                            <iframe
+                                                                width="100%"
+                                                                height="100%"
+                                                                frameborder="0"
+                                                                style="border:0"
+                                                                src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($day->accommodation_address) }}"
+                                                                allowfullscreen>
+                                                            </iframe>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-muted mb-2">
+                                                        <i class="bi bi-geo-alt me-1"></i>{{ $day->accommodation_address }}
+                                                    </p>
+                                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($day->accommodation_address) }}" 
+                                                       target="_blank" 
+                                                       class="btn btn-sm btn-primary nowrap">
+                                                        <i class="bi bi-map me-1"></i>Let's go
+                                                    </a>
+                                                @endif
                                             </div>
-                                            <p class="text-muted mb-2">
-                                                <i class="bi bi-geo-alt me-1"></i>{{ $day->accommodation_address }}
-                                            </p>
-                                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($day->accommodation_address) }}" 
-                                               target="_blank" 
-                                               class="btn btn-sm btn-primary nowrap">
-                                                <i class="bi bi-map me-1"></i>Let's go
-                                            </a>
-                                        @endif
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        @endif
+                                @endif
 
-                        <!-- Meals -->
-                        @if($day->meals)
-                            <div class="mb-4">
-                                <h4 class="h6 text-primary mb-3">
-                                    <i class="bi bi-cup-hot me-2"></i>Meals
-                                </h4>
-                                <div class="row g-3">
-                                    @foreach(['breakfast', 'lunch', 'dinner'] as $mealType)
-                                        @if(isset($day->meals[$mealType]['name']))
-                                            <div class="col-md-4">
-                                                <div class="card h-100">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title text-capitalize">{{ $mealType }}</h5>
-                                                        <p class="card-text mb-1">{{ $day->meals[$mealType]['name'] }}</p>
-                                                        @if(isset($day->meals[$mealType]['address']))
-                                                            <div class="mb-2">
-                                                                <div class="map-container" style="height: 200px; width: 100%;">
-                                                                    <iframe
-                                                                        width="100%"
-                                                                        height="100%"
-                                                                        frameborder="0"
-                                                                        style="border:0"
-                                                                        src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($day->meals[$mealType]['address']) }}"
-                                                                        allowfullscreen>
-                                                                    </iframe>
+                                <!-- Meals -->
+                                @if($day->meals)
+                                    <div class="mb-4">
+                                        <h4 class="h6 text-primary mb-3">
+                                            <i class="bi bi-cup-hot me-2"></i>Meals
+                                        </h4>
+                                        <div class="row g-3">
+                                            @foreach(['breakfast', 'lunch', 'dinner'] as $mealType)
+                                                @if(isset($day->meals[$mealType]['name']))
+                                                    <div class="col-md-4">
+                                                        <div class="card h-100">
+                                                            <div class="card-body">
+                                                                <h5 class="card-title text-capitalize">{{ $mealType }}</h5>
+                                                                <p class="card-text mb-1">{{ $day->meals[$mealType]['name'] }}</p>
+                                                                @if(isset($day->meals[$mealType]['address']))
+                                                                    <div class="mb-2">
+                                                                        <a href="#" class="toggle-map-link small text-primary" data-map-id="meal-map-{{ $day->id }}-{{ $mealType }}">Show Map</a>
+                                                                        <div id="meal-map-{{ $day->id }}-{{ $mealType }}" class="map-container mt-2" style="height: 200px; width: 100%; display: none;">
+                                                                            <iframe
+                                                                                width="100%"
+                                                                                height="100%"
+                                                                                frameborder="0"
+                                                                                style="border:0"
+                                                                                src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($day->meals[$mealType]['address']) }}"
+                                                                                allowfullscreen>
+                                                                            </iframe>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p class="text-muted small mb-2">
+                                                                        <i class="bi bi-geo-alt me-1"></i>{{ $day->meals[$mealType]['address'] }}
+                                                                    </p>
+                                                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($day->meals[$mealType]['address']) }}" 
+                                                                       target="_blank" 
+                                                                       class="btn btn-sm btn-primary nowrap">
+                                                                        <i class="bi bi-map me-1"></i>Let's go
+                                                                    </a>
+                                                                @endif
+
+                                                                <!-- Meal Photos -->
+                                                                @php
+                                                                    $mealPhotos = $day->getMealPhotos($mealType);
+                                                                @endphp
+                                                                @if($mealPhotos->isNotEmpty())
+                                                                    <div class="mt-3">
+                                                                        <h6 class="small text-muted mb-2">Photos</h6>
+                                                                        <div class="row g-2">
+                                                                            @foreach($mealPhotos as $photo)
+                                                                                <div class="col-4">
+                                                                                    <div class="position-relative">
+                                                                                        <a href="{{ $photo['url'] }}" target="_blank" class="d-block">
+                                                                                            <img src="{{ $photo['thumb_url'] }}" 
+                                                                                                 alt="Meal photo" 
+                                                                                                 class="img-fluid rounded"
+                                                                                                 style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                        </a>
+                                                                                        <button type="button" 
+                                                                                            class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-photo"
+                                                                                            data-photo-path="{{ $photo['path'] }}"
+                                                                                            data-day-id="{{ $day->id }}">
+                                                                                            <i class="bi bi-trash"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Activities -->
+                                @if($day->activities)
+                                    <div class="mb-4">
+                                        <h4 class="h6 text-primary mb-3">
+                                            <i class="bi bi-calendar-check me-2"></i>Activities & Sightseeing
+                                        </h4>
+                                        <div class="row g-3">
+                                            @foreach($day->activities as $activityIndex => $activity)
+                                                <div class="col-md-6">
+                                                    <div class="card h-100 border-0 shadow-sm">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-start mb-2">
+                                                                <div class="flex-grow-1">
+                                                                    <h5 class="card-title h6 mb-1">{{ $activity['name'] }}</h5>
+                                                                    @if(isset($activity['description']))
+                                                                        <p class="card-text small text-muted mb-2">{{ $activity['description'] }}</p>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="d-flex gap-2">
+                                                                    <span class="badge {{ isset($activity['entry_fee']) && $activity['entry_fee'] > 0 ? 'bg-success' : 'bg-info' }} rounded-pill">
+                                                                        <i class="bi bi-ticket-perforated me-1"></i>
+                                                                        @if(isset($activity['entry_fee']) && $activity['entry_fee'] > 0)
+                                                                            ${{ number_format($activity['entry_fee'], 2) }}
+                                                                        @else
+                                                                            Free
+                                                                        @endif
+                                                                    </span>
+                                                                    <span class="badge bg-primary rounded-pill">
+                                                                        <i class="bi bi-geo-alt me-1"></i>Location
+                                                                    </span>
                                                                 </div>
                                                             </div>
-                                                            <p class="text-muted small mb-2">
-                                                                <i class="bi bi-geo-alt me-1"></i>{{ $day->meals[$mealType]['address'] }}
-                                                            </p>
-                                                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($day->meals[$mealType]['address']) }}" 
-                                                               target="_blank" 
-                                                               class="btn btn-sm btn-primary nowrap">
-                                                                <i class="bi bi-map me-1"></i>Let's go
-                                                            </a>
-                                                        @endif
+                                                            @if(isset($activity['address']))
+                                                                <div class="mb-3">
+                                                                    <a href="#" class="toggle-map-link small text-primary" data-map-id="activity-map-{{ $day->id }}-{{ $activityIndex }}">Show Map</a>
+                                                                    <div id="activity-map-{{ $day->id }}-{{ $activityIndex }}" class="map-container mt-2" style="height: 150px; width: 100%; display: none;">
+                                                                        <iframe
+                                                                            width="100%"
+                                                                            height="100%"
+                                                                            frameborder="0"
+                                                                            style="border:0"
+                                                                            src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($activity['address']) }}"
+                                                                            allowfullscreen>
+                                                                        </iframe>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <p class="text-muted small mb-0">
+                                                                        <i class="bi bi-geo-alt me-1"></i>{{ $activity['address'] }}
+                                                                    </p>
+                                                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($activity['address']) }}" 
+                                                                       target="_blank" 
+                                                                       class="btn btn-sm btn-primary nowrap">
+                                                                        <i class="bi bi-map me-1"></i>Let's go
+                                                                    </a>
+                                                                </div>
+                                                            @endif
 
-                                                        <!-- Meal Photos -->
-                                                        @php
-                                                            $mealPhotos = $day->getMealPhotos($mealType);
-                                                        @endphp
-                                                        @if($mealPhotos->isNotEmpty())
-                                                            <div class="mt-3">
-                                                                <h6 class="small text-muted mb-2">Photos</h6>
-                                                                <div class="row g-2">
-                                                                    @foreach($mealPhotos as $photo)
-                                                                        <div class="col-4">
-                                                                            <div class="position-relative">
-                                                                                <a href="{{ $photo['url'] }}" target="_blank" class="d-block">
-                                                                                    <img src="{{ $photo['thumb_url'] }}" 
-                                                                                         alt="Meal photo" 
-                                                                                         class="img-fluid rounded"
-                                                                                         style="width: 100%; height: 80px; object-fit: cover;">
+                                                            <!-- Activity Photos -->
+                                                            @php
+                                                                $activityPhotos = $day->getActivityPhotos($activityIndex);
+                                                            @endphp
+                                                            @if($activityPhotos->isNotEmpty())
+                                                                <div class="mt-3">
+                                                                    <h6 class="small text-muted mb-2">Photos</h6>
+                                                                    <div class="row g-2">
+                                                                        @foreach($activityPhotos as $photo)
+                                                                            <div class="col-4">
+                                                                                <div class="position-relative">
+                                                                                    <a href="{{ $photo['url'] }}" target="_blank" class="d-block">
+                                                                                        <img src="{{ $photo['thumb_url'] }}" 
+                                                                                             alt="Activity photo" 
+                                                                                             class="img-fluid rounded"
+                                                                                             style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                    </a>
+                                                                                    <button type="button" 
+                                                                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-photo"
+                                                                                        data-photo-path="{{ $photo['path'] }}"
+                                                                                        data-day-id="{{ $day->id }}">
+                                                                                        <i class="bi bi-trash"></i>
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                            <!-- Receipts -->
+                                                            @php
+                                                                $receipts = $day->getReceipts();
+                                                            @endphp
+                                                            @if($receipts->isNotEmpty())
+                                                                <div class="mt-3">
+                                                                    <h6 class="small text-muted mb-2">Receipts</h6>
+                                                                    <div class="list-group list-group-flush">
+                                                                        @foreach($receipts as $receipt)
+                                                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                <a href="{{ $receipt['url'] }}" 
+                                                                                   target="_blank" 
+                                                                                   class="text-decoration-none">
+                                                                                    <i class="bi bi-file-earmark-text me-2"></i>
+                                                                                    <span class="text-truncate">{{ $receipt['name'] }}</span>
                                                                                 </a>
                                                                                 <button type="button" 
-                                                                                    class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-photo"
-                                                                                    data-photo-path="{{ $photo['path'] }}"
+                                                                                    class="btn btn-danger btn-sm delete-photo"
+                                                                                    data-photo-path="{{ $receipt['path'] }}"
                                                                                     data-day-id="{{ $day->id }}">
                                                                                     <i class="bi bi-trash"></i>
                                                                                 </button>
                                                                             </div>
-                                                                        </div>
-                                                                    @endforeach
+                                                                        @endforeach
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- Activities -->
-                        @if($day->activities)
-                            <div class="mb-4">
-                                <h4 class="h6 text-primary mb-3">
-                                    <i class="bi bi-calendar-check me-2"></i>Activities & Sightseeing
-                                </h4>
-                                <div class="row g-3">
-                                    @foreach($day->activities as $activityIndex => $activity)
-                                        <div class="col-md-6">
-                                            <div class="card h-100 border-0 shadow-sm">
-                                                <div class="card-body">
-                                                    <div class="d-flex align-items-start mb-2">
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="card-title h6 mb-1">{{ $activity['name'] }}</h5>
-                                                            @if(isset($activity['description']))
-                                                                <p class="card-text small text-muted mb-2">{{ $activity['description'] }}</p>
                                                             @endif
                                                         </div>
-                                                        <div class="d-flex gap-2">
-                                                            <span class="badge {{ isset($activity['entry_fee']) && $activity['entry_fee'] > 0 ? 'bg-success' : 'bg-info' }} rounded-pill">
-                                                                <i class="bi bi-ticket-perforated me-1"></i>
-                                                                @if(isset($activity['entry_fee']) && $activity['entry_fee'] > 0)
-                                                                    ${{ number_format($activity['entry_fee'], 2) }}
-                                                                @else
-                                                                    Free
-                                                                @endif
-                                                            </span>
-                                                            <span class="badge bg-primary rounded-pill">
-                                                                <i class="bi bi-geo-alt me-1"></i>Location
-                                                            </span>
-                                                        </div>
                                                     </div>
-                                                    @if(isset($activity['address']))
-                                                        <div class="mb-3">
-                                                            <div class="map-container" style="height: 150px; width: 100%;">
-                                                                <iframe
-                                                                    width="100%"
-                                                                    height="100%"
-                                                                    frameborder="0"
-                                                                    style="border:0"
-                                                                    src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_api_key') }}&q={{ urlencode($activity['address']) }}"
-                                                                    allowfullscreen>
-                                                                </iframe>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <p class="text-muted small mb-0">
-                                                                <i class="bi bi-geo-alt me-1"></i>{{ $activity['address'] }}
-                                                            </p>
-                                                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($activity['address']) }}" 
-                                                               target="_blank" 
-                                                               class="btn btn-sm btn-primary nowrap">
-                                                                <i class="bi bi-map me-1"></i>Let's go
-                                                            </a>
-                                                        </div>
-                                                    @endif
-
-                                                    <!-- Activity Photos -->
-                                                    @php
-                                                        $activityPhotos = $day->getActivityPhotos($activityIndex);
-                                                    @endphp
-                                                    @if($activityPhotos->isNotEmpty())
-                                                        <div class="mt-3">
-                                                            <h6 class="small text-muted mb-2">Photos</h6>
-                                                            <div class="row g-2">
-                                                                @foreach($activityPhotos as $photo)
-                                                                    <div class="col-4">
-                                                                        <div class="position-relative">
-                                                                            <a href="{{ $photo['url'] }}" target="_blank" class="d-block">
-                                                                                <img src="{{ $photo['thumb_url'] }}" 
-                                                                                     alt="Activity photo" 
-                                                                                     class="img-fluid rounded"
-                                                                                     style="width: 100%; height: 80px; object-fit: cover;">
-                                                                            </a>
-                                                                            <button type="button" 
-                                                                                class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-photo"
-                                                                                data-photo-path="{{ $photo['path'] }}"
-                                                                                data-day-id="{{ $day->id }}">
-                                                                                <i class="bi bi-trash"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                    @endif
-
-                                                    <!-- Receipts -->
-                                                    @php
-                                                        $receipts = $day->getReceipts();
-                                                    @endphp
-                                                    @if($receipts->isNotEmpty())
-                                                        <div class="mt-3">
-                                                            <h6 class="small text-muted mb-2">Receipts</h6>
-                                                            <div class="list-group list-group-flush">
-                                                                @foreach($receipts as $receipt)
-                                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                                        <a href="{{ $receipt['url'] }}" 
-                                                                           target="_blank" 
-                                                                           class="text-decoration-none">
-                                                                            <i class="bi bi-file-earmark-text me-2"></i>
-                                                                            <span class="text-truncate">{{ $receipt['name'] }}</span>
-                                                                        </a>
-                                                                        <button type="button" 
-                                                                            class="btn btn-danger btn-sm delete-photo"
-                                                                            data-photo-path="{{ $receipt['path'] }}"
-                                                                            data-day-id="{{ $day->id }}">
-                                                                            <i class="bi bi-trash"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                    @endif
                                                 </div>
-                                            </div>
+                                            @endforeach
                                         </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
+                                    </div>
+                                @endif
 
-                        <!-- Notes -->
-                        @if($day->notes)
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <strong>Additional Notes:</strong>
-                                <p class="mb-0 mt-2">{{ $day->notes }}</p>
+                                <!-- Notes -->
+                                @if($day->notes)
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <strong>Additional Notes:</strong>
+                                        <p class="mb-0 mt-2">{{ $day->notes }}</p>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
 
         <!-- Sidebar -->
@@ -489,6 +512,19 @@
 
     @push('scripts')
     <script>
+        // Toggle map visibility
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('toggle-map-link')) {
+                e.preventDefault();
+                const mapId = e.target.getAttribute('data-map-id');
+                const mapDiv = document.getElementById(mapId);
+                if (mapDiv) {
+                    const isVisible = mapDiv.style.display !== 'none';
+                    mapDiv.style.display = isVisible ? 'none' : 'block';
+                    e.target.textContent = isVisible ? 'Show Map' : 'Hide Map';
+                }
+            }
+        });
         // Add this to your existing scripts
         document.addEventListener('click', function(e) {
             if (e.target.closest('.delete-photo')) {
