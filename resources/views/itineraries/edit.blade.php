@@ -478,6 +478,7 @@
         $(document).ready(function() {
             $('.delete-gallery-image').on('click', function() {
                 const image = $(this).data('image');
+                console.log('Deleting gallery image:', image);
                 if (confirm('Are you sure you want to delete this image?')) {
                     $.ajax({
                         url: '{{ route('itineraries.gallery.delete', $itinerary->id) }}?image=' + image,
@@ -487,10 +488,12 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
+                            console.log('Gallery image deleted successfully:', response);
                             alert('Gallery image deleted successfully.');
                             location.reload();
                         },
                         error: function(xhr) {
+                            console.error('Failed to delete gallery image:', xhr.responseText);
                             alert('Failed to delete gallery image.');
                         }
                     });
