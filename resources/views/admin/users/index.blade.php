@@ -3,6 +3,41 @@
         Users Management
     </x-slot>
 
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Users</h6>
+                    <h3 class="mb-0">{{ $totalUsers }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Active Users</h6>
+                    <h3 class="mb-0">{{ $activeUsers }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Blocked Users</h6>
+                    <h3 class="mb-0">{{ $blockedUsers }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Currently Online</h6>
+                    <h3 class="mb-0"><span id="live-online-count">{{ $onlineUsers }}</span></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">All Users</h5>
@@ -89,4 +124,16 @@
             </div>
         </div>
     </div>
-</x-admin-layout> 
+</x-admin-layout>
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function fetchOnlineCount() {
+    $.get("{{ route('admin.users.online-count') }}", function(data) {
+        $('#live-online-count').text(data.count);
+    });
+}
+setInterval(fetchOnlineCount, 10000); // every 10 seconds
+</script>
+@endpush 

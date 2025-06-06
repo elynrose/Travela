@@ -14,7 +14,12 @@ class OrderController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.orders.index', compact('orders'));
+        $totalCount = Order::count();
+        $completedCount = Order::where('payment_status', 'completed')->count();
+        $pendingCount = Order::where('payment_status', 'pending')->count();
+        $failedCount = Order::where('payment_status', 'failed')->count();
+
+        return view('admin.orders.index', compact('orders', 'totalCount', 'completedCount', 'pendingCount', 'failedCount'));
     }
 
     public function show(Order $order)

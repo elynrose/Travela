@@ -14,7 +14,12 @@ class PayoutController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.payouts.index', compact('payouts'));
+        $totalCount = PayoutRequest::count();
+        $pendingCount = PayoutRequest::where('status', 'pending')->count();
+        $approvedCount = PayoutRequest::where('status', 'approved')->count();
+        $rejectedCount = PayoutRequest::where('status', 'rejected')->count();
+
+        return view('admin.payouts.index', compact('payouts', 'totalCount', 'pendingCount', 'approvedCount', 'rejectedCount'));
     }
 
     public function approve(PayoutRequest $payoutRequest)

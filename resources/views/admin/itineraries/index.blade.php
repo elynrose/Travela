@@ -3,6 +3,41 @@
         Itineraries
     </x-slot>
 
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Active Itineraries</h6>
+                    <h3 class="mb-0">{{ $activeCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Draft Itineraries</h6>
+                    <h3 class="mb-0">{{ $draftCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Purchased Itineraries</h6>
+                    <h3 class="mb-0">{{ $purchasedCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Copied Itineraries</h6>
+                    <h3 class="mb-0">{{ $copiedCount }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">

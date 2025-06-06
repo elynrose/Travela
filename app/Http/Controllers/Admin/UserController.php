@@ -12,8 +12,12 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $users = User::latest()->paginate(20);
+        $totalUsers = User::count();
+        $activeUsers = User::where('is_blocked', false)->count();
+        $blockedUsers = User::where('is_blocked', true)->count();
+        $onlineUsers = User::online()->count();
+        return view('admin.users.index', compact('users', 'totalUsers', 'activeUsers', 'blockedUsers', 'onlineUsers'));
     }
 
     public function show(User $user)
@@ -56,6 +60,12 @@ class UserController extends Controller
         $user->update(['is_blocked' => false]);
 
         return back()->with('success', 'User has been unblocked.');
+    }
+
+    public function onlineCount()
+    {
+        $count = User::online()->count();
+        return response()->json(['count' => $count]);
     }
 }
 

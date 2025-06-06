@@ -24,6 +24,7 @@ class DashboardController extends Controller
             'total_orders' => Order::count(),
             'total_revenue' => Order::where('payment_status', 'completed')->sum('amount'),
             'pending_payouts' => PayoutRequest::where('status', 'pending')->count(),
+            'platform_profit' => Order::where('payment_status', 'completed')->sum('amount') * 0.30,
         ];
 
         $recent_users = User::latest()->take(5)->get();

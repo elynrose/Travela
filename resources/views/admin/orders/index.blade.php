@@ -2,6 +2,42 @@
     <x-slot name="header">
         Orders Management
     </x-slot>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Orders</h6>
+                    <h3 class="mb-0">{{ $totalCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Completed Orders</h6>
+                    <h3 class="mb-0">{{ $completedCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Pending Orders</h6>
+                    <h3 class="mb-0">{{ $pendingCount }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Failed Orders</h6>
+                    <h3 class="mb-0">{{ $failedCount }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">All Orders</h5>

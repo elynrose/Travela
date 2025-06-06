@@ -140,6 +140,7 @@ Route::middleware(['auth', 'web', \App\Http\Middleware\CheckAdmin::class])->pref
     Route::put('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
     Route::post('/users/{user}/block', [App\Http\Controllers\Admin\UserController::class, 'block'])->name('users.block');
     Route::post('/users/{user}/unblock', [App\Http\Controllers\Admin\UserController::class, 'unblock'])->name('users.unblock');
+    Route::get('/users/online-count', [App\Http\Controllers\Admin\UserController::class, 'onlineCount'])->name('users.online-count');
     
     // Itinerary Management
     Route::get('/itineraries', [App\Http\Controllers\Admin\ItineraryController::class, 'index'])->name('itineraries.index');

@@ -15,7 +15,14 @@ class ItineraryController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.itineraries.index', compact('itineraries'));
+        $activeCount = Itinerary::where('is_published', true)->count();
+        $draftCount = Itinerary::where('is_published', false)->count();
+        $purchasedCount = Itinerary::whereHas('orders', function($q) {
+            $q->where('payment_status', 'completed');
+        })->count();
+        $copiedCount = Itinerary::where('title', 'like', 'My Copy of%')->count();
+
+        return view('admin.itineraries.index', compact('itineraries', 'activeCount', 'draftCount', 'purchasedCount', 'copiedCount'));
     }
 
     public function show(Itinerary $itinerary)
