@@ -10,23 +10,18 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sender_id',
-        'receiver_id',
-        'message',
-        'read_at',
+        'user_id',
+        'itinerary_id',
+        'content',
     ];
 
-    protected $casts = [
-        'read_at' => 'datetime',
-    ];
-
-    public function sender()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function receiver()
+    public function itinerary()
     {
-        return $this->belongsTo(User::class, 'receiver_id');
+        return $this->belongsTo(Itinerary::class);
     }
 }

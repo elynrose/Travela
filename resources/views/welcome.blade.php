@@ -46,7 +46,7 @@
             color: #fff;
         }
             </style>
-</head>
+    </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">

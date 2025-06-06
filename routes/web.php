@@ -59,7 +59,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('itineraries/{itinerary}/days/view', [ItineraryController::class, 'showDays'])->name('itineraries.days.show');
         Route::get('/my-itineraries', [ItineraryController::class, 'myItineraries'])->name('itineraries.my');
         Route::post('/itineraries/{itinerary}/copy', [ItineraryController::class, 'copy'])->name('itineraries.copy');
-        Route::post('/itineraries/{itinerary}/cover-image', [App\Http\Controllers\ItineraryController::class, 'uploadCoverImage'])->name('itineraries.uploadCoverImage');
     });
 
     // Orders
