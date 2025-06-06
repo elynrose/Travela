@@ -78,7 +78,13 @@ class ItinerarySeeder extends Seeder
                     'Comfortable walking shoes',
                 ],
                 'is_published' => true,
-                'is_featured' => true
+                'is_featured' => true,
+                'cover_image' => 'covers/bali-adventure.jpg',
+                'gallery' => [
+                    'gallery/bali-1.jpg',
+                    'gallery/bali-2.jpg',
+                    'gallery/bali-3.jpg',
+                ],
             ],
             [
                 'title' => 'Paris City Break',
@@ -112,7 +118,13 @@ class ItinerarySeeder extends Seeder
                     'Comfortable walking shoes',
                 ],
                 'is_published' => true,
-                'is_featured' => true
+                'is_featured' => true,
+                'cover_image' => 'covers/paris-city.jpg',
+                'gallery' => [
+                    'gallery/paris-1.jpg',
+                    'gallery/paris-2.jpg',
+                    'gallery/paris-3.jpg',
+                ],
             ],
             [
                 'title' => 'Safari Adventure in Tanzania',
@@ -146,11 +158,25 @@ class ItinerarySeeder extends Seeder
                     'Travel insurance',
                 ],
                 'is_published' => true,
-                'is_featured' => true
+                'is_featured' => true,
+                'cover_image' => 'covers/safari-adventure.jpg',
+                'gallery' => [
+                    'gallery/safari-1.jpg',
+                    'gallery/safari-2.jpg',
+                    'gallery/safari-3.jpg',
+                ],
             ],
         ];
 
         foreach ($itineraries as $itineraryData) {
+            // Create cover image
+            $this->createSampleImage($itineraryData['cover_image']);
+            
+            // Create gallery images
+            foreach ($itineraryData['gallery'] as $galleryImage) {
+                $this->createSampleImage($galleryImage);
+            }
+
             $itinerary = Itinerary::create([
                 'user_id' => $users->random()->id,
                 'title' => $itineraryData['title'],
@@ -168,6 +194,8 @@ class ItinerarySeeder extends Seeder
                 'requirements' => $itineraryData['requirements'],
                 'is_published' => $itineraryData['is_published'],
                 'is_featured' => $itineraryData['is_featured'],
+                'cover_image' => $itineraryData['cover_image'],
+                'gallery' => $itineraryData['gallery'],
             ]);
 
             // Attach random categories (2-3 per itinerary)

@@ -719,6 +719,11 @@ class ItineraryController extends Controller
                 // Validate the image
                 $request->validate([
                     'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+                ], [
+                    'cover_image.required' => 'A cover image is required.',
+                    'cover_image.image' => 'The cover image must be an image file.',
+                    'cover_image.mimes' => 'The cover image must be a JPEG, PNG, JPG, or GIF.',
+                    'cover_image.max' => 'The cover image must not exceed 2MB.'
                 ]);
 
                 // Delete old cover image if exists
@@ -783,9 +788,9 @@ class ItineraryController extends Controller
                 $request->validate([
                     'gallery.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
                 ], [
-                    'gallery.*.image' => 'Each file must be an image.',
-                    'gallery.*.mimes' => 'Each image must be a JPEG, PNG, JPG, or GIF.',
-                    'gallery.*.max' => 'Each image must not exceed 2MB.'
+                    'gallery.*.image' => 'Each gallery file must be an image.',
+                    'gallery.*.mimes' => 'Each gallery image must be a JPEG, PNG, JPG, or GIF.',
+                    'gallery.*.max' => 'Each gallery image must not exceed 2MB.'
                 ]);
 
                 $gallery = $itinerary->gallery ?? [];
@@ -836,7 +841,6 @@ class ItineraryController extends Controller
                 'location' => 'required|string|max:255',
                 'country' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
-                'duration_days' => 'required|integer|min:1',
                 'categories' => 'required|array',
                 'categories.*' => 'exists:categories,id',
                 'highlights' => 'array',
@@ -847,7 +851,8 @@ class ItineraryController extends Controller
                 'excluded_items.*' => 'string',
                 'requirements' => 'array',
                 'requirements.*' => 'string',
-                'transportation_type' => 'required|in:flight,road,both',
+                'duration_days' => 'nullable|integer|min:1',
+                'transportation_type' => 'nullable|in:flight,road,both',
                 'flight_duration' => 'nullable|string',
                 'airfare_min' => 'nullable|numeric|min:0',
                 'airfare_max' => 'nullable|numeric|min:0',
@@ -861,6 +866,26 @@ class ItineraryController extends Controller
                 'agency_fees' => 'nullable|numeric|min:0',
                 'travel_notes' => 'nullable|string',
                 'is_published' => 'boolean'
+            ], [
+                'title.required' => 'The title field is required.',
+                'title.max' => 'The title may not be greater than 255 characters.',
+                'description.required' => 'The description field is required.',
+                'location.required' => 'The location field is required.',
+                'country.required' => 'The country field is required.',
+                'price.required' => 'The price field is required.',
+                'price.numeric' => 'The price must be a number.',
+                'categories.required' => 'Please select at least one category.',
+                'categories.*.exists' => 'One or more selected categories are invalid.',
+                'highlights.array' => 'Highlights must be an array.',
+                'included_items.array' => 'Included items must be an array.',
+                'excluded_items.array' => 'Excluded items must be an array.',
+                'requirements.array' => 'Requirements must be an array.',
+                'transportation_type.in' => 'Transportation type must be flight, road, or both.',
+                'airfare_min.numeric' => 'Airfare min must be a number.',
+                'airfare_max.numeric' => 'Airfare max must be a number.',
+                'booking_website.url' => 'Booking website must be a valid URL.',
+                'road_type.in' => 'Road type must be highway, local, or mixed.',
+                'agency_fees.numeric' => 'Agency fees must be a number.'
             ]);
 
             $itinerary->update($validated);
@@ -889,18 +914,13 @@ class ItineraryController extends Controller
             DB::rollBack();
             \Log::error('Error updating itinerary', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'itinerary_id' => $itinerary->id
             ]);
 
-            // If this is an AJAX request, return JSON response
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error updating itinerary: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return back()->with('error', 'Error updating itinerary. Please try again.');
+            // Show the real error for debugging
+            return back()->withInput()
+                ->with('error', 'Error updating itinerary: ' . $e->getMessage());
         }
     }
 
