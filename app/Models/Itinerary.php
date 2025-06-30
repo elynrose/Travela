@@ -108,7 +108,7 @@ class Itinerary extends Model
         if (!$this->cover_image) {
             return null;
         }
-        return asset('storage/' . $this->cover_image);
+        return Storage::url($this->cover_image);
     }
 
     public function getCoverThumbUrl()
@@ -116,6 +116,6 @@ class Itinerary extends Model
         if (!$this->cover_image) {
             return null;
         }
-        return asset('storage/' . str_replace('covers/', 'covers/thumbnails/', $this->cover_image));
+        return Storage::url(str_replace('covers/', 'covers/thumbnails/', $this->cover_image));
     }
 }

@@ -19,12 +19,14 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm">
                     <div class="position-relative">
-                        @if($itinerary->cover_image && $itinerary->getCoverImageUrl())
-                            <img src="{{ $itinerary->getCoverImageUrl() }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                        @if($itinerary->cover_image)
+                            <a href="{{ route('itineraries.show', $itinerary) }}">
+                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            </a>
                         @else
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                            </div>
+                            <a href="{{ route('itineraries.show', $itinerary) }}" class="d-block bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                            </a>
                         @endif
                         <span class="position-absolute top-0 end-0 m-3 badge bg-primary">
                             ${{ number_format($itinerary->price, 2) }}

@@ -27,11 +27,13 @@
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm">
                         @if($itinerary->cover_image)
-                            <img src="{{ asset('storage/' . $itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            <a href="{{ route('itineraries.show', $itinerary) }}">
+                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            </a>
                         @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <a href="{{ route('itineraries.show', $itinerary) }}" class="d-block bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
-                            </div>
+                            </a>
                         @endif
                         <div class="card-body d-flex flex-column">
                             <div class="mb-2">

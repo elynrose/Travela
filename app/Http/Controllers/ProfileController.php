@@ -81,17 +81,9 @@ class ProfileController extends Controller
             $user = $request->user();
             $file = $request->file('avatar');
             
-            \Log::info('Processing avatar upload', [
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize()
-            ]);
-
             // Delete old avatar if exists
             if ($user->avatar) {
-                \Log::info('Deleting old avatar', [
-                    'old_path' => $user->avatar
-                ]);
+                // Delete both original and thumbnail
                 Storage::disk('public')->delete($user->avatar);
                 Storage::disk('public')->delete(str_replace('avatars/', 'avatars/thumbnails/', $user->avatar));
             }
@@ -104,51 +96,27 @@ class ProfileController extends Controller
             
             // Save original image
             $originalPath = 'avatars/' . $filename;
-            $originalFullPath = storage_path('app/public/' . $originalPath);
-            
-            \Log::info('Saving original avatar', [
-                'path' => $originalFullPath
-            ]);
             
             // Ensure directory exists
-            if (!file_exists(dirname($originalFullPath))) {
-                mkdir(dirname($originalFullPath), 0755, true);
-            }
+            Storage::disk('public')->makeDirectory(dirname($originalPath));
             
             // Save the image
-            $image->save($originalFullPath);
+            $image->save(Storage::disk('public')->path($originalPath));
             
             // Create and save thumbnail
             $thumbPath = 'avatars/thumbnails/' . $filename;
-            $thumbFullPath = storage_path('app/public/' . $thumbPath);
-            
-            \Log::info('Saving avatar thumbnail', [
-                'path' => $thumbFullPath
-            ]);
             
             // Ensure thumbnail directory exists
-            if (!file_exists(dirname($thumbFullPath))) {
-                mkdir(dirname($thumbFullPath), 0755, true);
-            }
+            Storage::disk('public')->makeDirectory(dirname($thumbPath));
             
             // Create and save the thumbnail
-            $image->cover(200, 200)->save($thumbFullPath);
+            $image->cover(200, 200)->save(Storage::disk('public')->path($thumbPath));
 
             // Update the avatar field in the database
             $user->update(['avatar' => $originalPath]);
 
-            \Log::info('Avatar saved successfully', [
-                'original_path' => $originalPath,
-                'thumb_path' => $thumbPath,
-                'db_path' => $originalPath
-            ]);
-
             return back()->with('status', 'avatar-updated');
         } catch (\Exception $e) {
-            \Log::error('Error processing avatar', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return back()->with('error', 'Failed to update avatar: ' . $e->getMessage());
         }
     }
@@ -162,26 +130,16 @@ class ProfileController extends Controller
             $user = $request->user();
             
             if ($user->avatar) {
-                \Log::info('Removing avatar', [
-                    'path' => $user->avatar
-                ]);
-                
                 // Delete both original and thumbnail
                 Storage::disk('public')->delete($user->avatar);
                 Storage::disk('public')->delete(str_replace('avatars/', 'avatars/thumbnails/', $user->avatar));
                 
                 // Clear the avatar field
                 $user->update(['avatar' => null]);
-                
-                \Log::info('Avatar removed successfully');
             }
             
             return back()->with('status', 'avatar-removed');
         } catch (\Exception $e) {
-            \Log::error('Error removing avatar', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return back()->with('error', 'Failed to remove avatar: ' . $e->getMessage());
         }
     }

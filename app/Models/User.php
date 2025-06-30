@@ -123,7 +123,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            return Storage::url($this->avatar);
         }
         return asset('images/default-avatar.png');
     }
@@ -132,7 +132,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     {
         if ($this->avatar) {
             $path = str_replace('avatars/', 'avatars/thumbnails/', $this->avatar);
-            return asset('storage/' . $path);
+            return Storage::url($path);
         }
         return asset('images/default-avatar.png');
     }

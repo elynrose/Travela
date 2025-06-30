@@ -8,7 +8,7 @@
             <div class="row mb-4">
                 <div class="col-md-2">
                     @if($user->avatar)
-                        <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" 
+                        <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" 
                              class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                     @else
                         <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" 

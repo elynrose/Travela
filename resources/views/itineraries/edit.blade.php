@@ -332,7 +332,7 @@
                             <div class="row g-2">
                               @foreach($itinerary->gallery as $image)
                                 <div class="col-md-3 position-relative">
-                                  <img src="{{ asset('storage/' . $image) }}" 
+                                  <img src="{{ Storage::url($image) }}" 
                                        alt="Gallery image" 
                                        class="img-thumbnail w-100" 
                                        style="max-height: 150px; object-fit: cover;">
