@@ -48,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('itineraries/{itinerary}/unpublish', [ItineraryController::class, 'unpublish'])->name('itineraries.unpublish');
         Route::get('itineraries/{itinerary}/days/edit', [ItineraryController::class, 'editDays'])->name('itineraries.days.edit');
         Route::put('itineraries/{itinerary}/days', [ItineraryController::class, 'updateDays'])->name('itineraries.days.update');
-        Route::delete('days/{day}/photos/{photoPath}', [ItineraryController::class, 'deleteDayPhoto'])
+        Route::delete('itineraries/days/{day}/photos/{photoPath}', [ItineraryController::class, 'deleteDayPhoto'])
             ->name('days.photos.delete')
             ->where('photoPath', '.*');
         Route::get('itineraries/{itinerary}/days/view', [ItineraryController::class, 'showDays'])->name('itineraries.days.show');
