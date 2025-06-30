@@ -14,8 +14,8 @@
                     <div class="mb-3">
                         <label class="text-muted">Status</label>
                         <p class="mb-0">
-                            <span class="badge bg-{{ $order->status === 'completed' ? 'success' : 'warning' }}">
-                                {{ ucfirst($order->status) }}
+                            <span class="badge bg-{{ $order->payment_status === 'completed' ? 'success' : 'warning' }}">
+                                {{ ucfirst($order->payment_status) }}
                             </span>
                         </p>
                     </div>

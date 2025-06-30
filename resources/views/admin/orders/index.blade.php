@@ -75,8 +75,8 @@
                                 </td>
                                 <td>${{ number_format($order->amount, 2) }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $order->status === 'completed' ? 'success' : 'warning' }}">
-                                        {{ ucfirst($order->status) }}
+                                    <span class="badge bg-{{ $order->payment_status === 'completed' ? 'success' : 'warning' }}">
+                                        {{ ucfirst($order->payment_status) }}
                                     </span>
                                 </td>
                                 <td>{{ $order->created_at->format('M d, Y') }}</td>
