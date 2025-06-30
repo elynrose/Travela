@@ -539,23 +539,34 @@ class ItineraryController extends Controller
             $filename = time() . '_' . $file->getClientOriginalName();
             
             try {
+                // Save original image using Laravel's store method
+                $originalPath = $file->store('covers', 'public');
+                
+                if (!$originalPath) {
+                    throw new \Exception('Failed to store the original image');
+                }
+
+                // Create thumbnail using Intervention Image
                 $image = $this->imageManager->read($file);
-                
-                // Save original image
-                $originalPath = 'covers/' . $filename;
-                
-                // Ensure directory exists
-                Storage::disk('public')->makeDirectory(dirname($originalPath));
-                
-                $image->save(Storage::disk('public')->path($originalPath));
-                
-                // Create and save thumbnail
                 $thumbPath = 'covers/thumbnails/' . $filename;
                 
-                // Ensure thumbnail directory exists
-                Storage::disk('public')->makeDirectory(dirname($thumbPath));
+                // Save thumbnail to temporary file first, then upload
+                $tempThumbPath = storage_path('app/temp/' . $filename);
                 
-                $image->cover(800, 400)->save(Storage::disk('public')->path($thumbPath));
+                // Ensure temp directory exists
+                if (!file_exists(dirname($tempThumbPath))) {
+                    mkdir(dirname($tempThumbPath), 0755, true);
+                }
+                
+                $image->cover(800, 400)->save($tempThumbPath);
+                
+                // Upload thumbnail to storage
+                $thumbStream = fopen($tempThumbPath, 'r');
+                Storage::disk('public')->put($thumbPath, $thumbStream);
+                fclose($thumbStream);
+                
+                // Clean up temp file
+                unlink($tempThumbPath);
 
                 $itinerary->cover_image = $originalPath;
                 $itinerary->save();
@@ -855,23 +866,34 @@ class ItineraryController extends Controller
         $filename = time() . '_' . $file->getClientOriginalName();
         
         try {
+            // Save original image using Laravel's store method
+            $originalPath = $file->store('covers', 'public');
+            
+            if (!$originalPath) {
+                throw new \Exception('Failed to store the original image');
+            }
+
+            // Create thumbnail using Intervention Image
             $image = $this->imageManager->read($file);
-            
-            // Save original image
-            $originalPath = 'covers/' . $filename;
-            
-            // Ensure directory exists
-            Storage::disk('public')->makeDirectory(dirname($originalPath));
-            
-            $image->save(Storage::disk('public')->path($originalPath));
-            
-            // Create and save thumbnail
             $thumbPath = 'covers/thumbnails/' . $filename;
             
-            // Ensure thumbnail directory exists
-            Storage::disk('public')->makeDirectory(dirname($thumbPath));
+            // Save thumbnail to temporary file first, then upload
+            $tempThumbPath = storage_path('app/temp/' . $filename);
             
-            $image->cover(800, 400)->save(Storage::disk('public')->path($thumbPath));
+            // Ensure temp directory exists
+            if (!file_exists(dirname($tempThumbPath))) {
+                mkdir(dirname($tempThumbPath), 0755, true);
+            }
+            
+            $image->cover(800, 400)->save($tempThumbPath);
+            
+            // Upload thumbnail to storage
+            $thumbStream = fopen($tempThumbPath, 'r');
+            Storage::disk('public')->put($thumbPath, $thumbStream);
+            fclose($thumbStream);
+            
+            // Clean up temp file
+            unlink($tempThumbPath);
 
             $itinerary->cover_image = $originalPath;
             $itinerary->save();
