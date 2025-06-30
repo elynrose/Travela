@@ -131,7 +131,10 @@
                             <div class="row g-3">
                                 @foreach($itinerary->gallery as $image)
                                     <div class="col-md-4">
-                                        <img src="{{ Storage::url($image) }}" alt="Gallery Image" class="img-fluid rounded" style="height: 200px; width: 100%; object-fit: cover;">
+                                        <img src="{{ Storage::url($image) }}" alt="Gallery Image" class="img-fluid rounded" style="height: 200px; width: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%; display: none;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>

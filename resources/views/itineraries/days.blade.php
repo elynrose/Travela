@@ -117,7 +117,12 @@
                                                                                 <img src="{{ Storage::url($photo['thumb_path']) }}" 
                                                                                      alt="Meal photo" 
                                                                                      class="img-fluid rounded"
-                                                                                     style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                     style="width: 100%; height: 80px; object-fit: cover;"
+                                                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                                     style="width: 100%; height: 80px; display: none;">
+                                                                                    <i class="bi bi-image text-muted"></i>
+                                                                                </div>
                                                                                 <button type="button" 
                                                                                         class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-photo"
                                                                                         data-photo-path="{{ $photo['path'] }}"
@@ -159,7 +164,12 @@
                                                                                 <img src="{{ Storage::url($photo['thumb_path']) }}" 
                                                                                      alt="Meal photo" 
                                                                                      class="img-fluid rounded"
-                                                                                     style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                     style="width: 100%; height: 80px; object-fit: cover;"
+                                                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                                     style="width: 100%; height: 80px; display: none;">
+                                                                                    <i class="bi bi-image text-muted"></i>
+                                                                                </div>
                                                                                 <button type="button" 
                                                                                         class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-photo"
                                                                                         data-photo-path="{{ $photo['path'] }}"
@@ -201,7 +211,12 @@
                                                                                 <img src="{{ Storage::url($photo['thumb_path']) }}" 
                                                                                      alt="Meal photo" 
                                                                                      class="img-fluid rounded"
-                                                                                     style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                     style="width: 100%; height: 80px; object-fit: cover;"
+                                                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                                     style="width: 100%; height: 80px; display: none;">
+                                                                                    <i class="bi bi-image text-muted"></i>
+                                                                                </div>
                                                                                 <button type="button" 
                                                                                         class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-photo"
                                                                                         data-photo-path="{{ $photo['path'] }}"
@@ -266,7 +281,12 @@
                                                                                                     <img src="{{ Storage::url($photo['thumb_path']) }}" 
                                                                                                          alt="Activity photo" 
                                                                                                          class="img-fluid rounded"
-                                                                                                         style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                                         style="width: 100%; height: 80px; object-fit: cover;"
+                                                                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                                                         style="width: 100%; height: 80px; display: none;">
+                                                                                                        <i class="bi bi-image text-muted"></i>
+                                                                                                    </div>
                                                                                                     <button type="button" 
                                                                                                             class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-photo"
                                                                                                             data-photo-path="{{ $photo['path'] }}"
@@ -321,7 +341,12 @@
                                                                             <img src="{{ Storage::url($receipt['path']) }}" 
                                                                                  alt="Receipt" 
                                                                                  class="img-fluid rounded"
-                                                                                 style="width: 100%; height: 80px; object-fit: cover;">
+                                                                                 style="width: 100%; height: 80px; object-fit: cover;"
+                                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                                     style="width: 100%; height: 80px; display: none;">
+                                                                                    <i class="bi bi-image text-muted"></i>
+                                                                                </div>
                                                                         @endif
                                                                         <button type="button" 
                                                                                 class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-photo"
