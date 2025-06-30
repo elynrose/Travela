@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class TrustCloudflareProxies
 {
@@ -43,14 +42,6 @@ class TrustCloudflareProxies
         if ($request->header('CF-Connecting-IP')) {
             $request->server->set('REMOTE_ADDR', $request->header('CF-Connecting-IP'));
         }
-
-        // Log Cloudflare headers for debugging
-        Log::debug('Cloudflare Headers', [
-            'CF-Connecting-IP' => $request->header('CF-Connecting-IP'),
-            'CF-IPCountry' => $request->header('CF-IPCountry'),
-            'CF-Ray' => $request->header('CF-Ray'),
-            'CF-Visitor' => $request->header('CF-Visitor'),
-        ]);
 
         return $next($request);
     }

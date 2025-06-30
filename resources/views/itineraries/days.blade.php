@@ -89,10 +89,8 @@
                                                 @error('itinerary_days.'.$index.'.accommodation')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
-                                                <input type="text" class="form-control mt-2" 
-                                                    name="itinerary_days[{{ $index }}][accommodation_address]" 
-                                                    value="{{ $day['accommodation_address'] ?? '' }}" 
-                                                    placeholder="Hotel address">
+                                                <div id="pac-container-{{ $index }}"></div>
+                                                <input type="hidden" name="itinerary_days[{{ $index }}][accommodation_address]" id="accommodation-address-{{ $index }}" value="{{ $day['accommodation_address'] ?? '' }}">
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold text-primary">Meals</label>
@@ -451,9 +449,8 @@
                                 <input type="text" class="form-control" 
                                     name="itinerary_days[${dayIndex}][accommodation]" 
                                     placeholder="Hotel name" required>
-                                <input type="text" class="form-control mt-2" 
-                                    name="itinerary_days[${dayIndex}][accommodation_address]" 
-                                    placeholder="Hotel address">
+                                <div id="pac-container-${dayIndex}"></div>
+                                <input type="hidden" name="itinerary_days[${dayIndex}][accommodation_address]" id="accommodation-address-${dayIndex}" value="">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-primary">Meals</label>
@@ -685,6 +682,40 @@
                     }
                 });
             });
+        });
+
+        function initializePlaceAutocomplete(index) {
+            const container = document.getElementById(`pac-container-${index}`);
+            if (!container) return;
+
+            // Remove any existing element
+            container.innerHTML = '';
+
+            // Create the PlaceAutocompleteElement
+            const pac = new google.maps.places.PlaceAutocompleteElement();
+            pac.id = `pac-${index}`;
+            container.appendChild(pac);
+
+            // Listen for place selection
+            pac.addEventListener('gmp-placeautocomplete-placechanged', (event) => {
+                const place = event.detail;
+                // Set the hidden input value to the formatted address
+                document.getElementById(`accommodation-address-${index}`).value = place.formatted_address || place.displayName;
+            });
+        }
+
+        // Initialize for existing days
+        document.addEventListener('DOMContentLoaded', () => {
+            const days = document.querySelectorAll('.itinerary-day');
+            days.forEach((day, index) => {
+                initializePlaceAutocomplete(index);
+            });
+        });
+
+        // Initialize for newly added days
+        document.getElementById('add-day').addEventListener('click', () => {
+            const dayIndex = document.querySelectorAll('.itinerary-day').length;
+            initializePlaceAutocomplete(dayIndex);
         });
     </script>
     @endpush

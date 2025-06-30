@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class CheckBlockedUser
 {
@@ -26,10 +25,6 @@ class CheckBlockedUser
 
             return $next($request);
         } catch (\Exception $e) {
-            Log::error('CheckBlockedUser middleware error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return $next($request);
         }
     }

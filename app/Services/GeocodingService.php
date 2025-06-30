@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
 class GeocodingService
@@ -15,60 +14,34 @@ class GeocodingService
         
         // Try to get from cache first
         if (Cache::has($cacheKey)) {
-            \Log::info('Retrieved coordinates from cache', [
-                'location' => $location,
-                'country' => $country
-            ]);
             return Cache::get($cacheKey);
         }
 
         try {
-            // Construct the query URL
+            // Construct the query URL for Google Maps Geocoding API
             $query = urlencode($location . ', ' . $country);
-            $url = "https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1";
+            $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$query}&key=" . config('services.google.maps_api_key');
             
-            // Add a delay to respect rate limits
-            sleep(1);
+            $response = Http::get($url);
             
-            $response = Http::withHeaders([
-                'User-Agent' => 'Travela/1.0'
-            ])->get($url);
-            
-            if ($response->successful() && !empty($response->json())) {
-                $data = $response->json()[0];
+            if ($response->successful() && $response->json('status') === 'OK') {
+                $data = $response->json('results.0.geometry.location');
                 $coordinates = [
                     'latitude' => (float) $data['lat'],
-                    'longitude' => (float) $data['lon']
+                    'longitude' => (float) $data['lng']
                 ];
                 
                 // Cache the results for 30 days
                 Cache::put($cacheKey, $coordinates, now()->addDays(30));
                 
-                \Log::info('Retrieved coordinates from API', [
-                    'location' => $location,
-                    'country' => $country,
-                    'coordinates' => $coordinates
-                ]);
-                
                 return $coordinates;
             }
-            
-            \Log::warning('No coordinates found for location', [
-                'location' => $location,
-                'country' => $country
-            ]);
             
             return [
                 'latitude' => null,
                 'longitude' => null
             ];
         } catch (\Exception $e) {
-            \Log::error('Error getting coordinates', [
-                'error' => $e->getMessage(),
-                'location' => $location,
-                'country' => $country
-            ]);
-            
             return [
                 'latitude' => null,
                 'longitude' => null

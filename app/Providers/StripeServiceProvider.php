@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Stripe\Stripe;
-use Illuminate\Support\Facades\Log;
 
 class StripeServiceProvider extends ServiceProvider
 {
@@ -18,15 +17,9 @@ class StripeServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        // Set up Stripe logging
-        Stripe::setLogger(Log::channel('stripe'));
-
         // Register Stripe webhook events
         $this->app['events']->listen('stripe.webhook.*', function ($event, $payload) {
-            Log::channel('stripe')->info('Stripe webhook event', [
-                'event' => $event,
-                'payload' => $payload
-            ]);
+            // Remove Log::channel and similar lines
         });
     }
 } 
