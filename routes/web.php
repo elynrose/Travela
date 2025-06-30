@@ -188,4 +188,20 @@ Route::get('/test-email-debug', function () {
     }
 });
 
+// Test route for admin status
+Route::get('/test-admin', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        return response()->json([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_admin' => $user->is_admin,
+            'isAdmin()' => $user->isAdmin(),
+            'role' => $user->role ?? 'not set'
+        ]);
+    }
+    return response()->json(['error' => 'Not authenticated']);
+});
+
 require __DIR__.'/auth.php';
