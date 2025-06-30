@@ -90,7 +90,7 @@
                             @forelse($itineraries as $itinerary)
                                 <a href="{{ route('itineraries.show', $itinerary) }}" class="list-group-item list-group-item-action border-0 px-0">
                                     <div class="d-flex align-items-center">
-                                        @if($itinerary->getCoverImageUrl())
+                                        @if($itinerary->cover_image && $itinerary->getCoverThumbUrl())
                                             <img src="{{ $itinerary->getCoverThumbUrl() }}" 
                                                  alt="{{ $itinerary->title }}" 
                                                  class="rounded-3 me-3" 
