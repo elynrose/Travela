@@ -108,7 +108,11 @@ class Itinerary extends Model
         if (!$this->cover_image) {
             return null;
         }
-        return Storage::url($this->cover_image);
+        try {
+            return Storage::url($this->cover_image);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     public function getCoverThumbUrl()
@@ -116,6 +120,16 @@ class Itinerary extends Model
         if (!$this->cover_image) {
             return null;
         }
-        return Storage::url(str_replace('covers/', 'covers/thumbnails/', $this->cover_image));
+        try {
+            $thumbPath = str_replace('covers/', 'covers/thumbnails/', $this->cover_image);
+            return Storage::url($thumbPath);
+        } catch (\Exception $e) {
+            // Fallback to original image if thumbnail fails
+            try {
+                return Storage::url($this->cover_image);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
     }
 }
