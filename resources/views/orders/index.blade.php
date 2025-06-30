@@ -51,9 +51,15 @@
                             <div class="row align-items-center">
                                 <!-- Order Image -->
                                 <div class="col-md-2">
-                                    <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
-                                         alt="{{ $order->itinerary->title }}" 
-                                         class="img-fluid rounded">
+                                    @if($order->itinerary->cover_image)
+                                        <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
+                                             alt="{{ $order->itinerary->title }}" 
+                                             class="img-fluid rounded">
+                                    @else
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <!-- Order Details -->

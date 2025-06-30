@@ -45,9 +45,15 @@
                         <h5 class="card-title mb-4">Itinerary Details</h5>
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
-                                     alt="{{ $order->itinerary->title }}" 
-                                     class="img-fluid rounded">
+                                @if($order->itinerary->cover_image)
+                                    <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
+                                         alt="{{ $order->itinerary->title }}" 
+                                         class="img-fluid rounded">
+                                @else
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                    </div>
+                                @endif
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-2">{{ $order->itinerary->title }}</h4>
