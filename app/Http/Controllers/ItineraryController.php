@@ -128,21 +128,34 @@ class ItineraryController extends Controller
             try {
                 $image = $this->imageManager->read($file);
                 
-                // Save original image
-                $originalPath = 'covers/' . $filename;
+                // Save original image using Laravel's store method
+                $originalPath = $file->store('covers', 'public');
                 
-                // Ensure directory exists
-                Storage::disk('public')->makeDirectory(dirname($originalPath));
-                
-                $image->save(Storage::disk('public')->path($originalPath));
-                
-                // Create and save thumbnail
+                if (!$originalPath) {
+                    throw new \Exception('Failed to store the original image');
+                }
+
+                // Create thumbnail using Intervention Image
+                $image = $this->imageManager->read($file);
                 $thumbPath = 'covers/thumbnails/' . $filename;
                 
-                // Ensure thumbnail directory exists
-                Storage::disk('public')->makeDirectory(dirname($thumbPath));
+                // Save thumbnail to temporary file first, then upload to cloud storage
+                $tempThumbPath = storage_path('app/temp/' . $filename);
                 
-                $image->cover(800, 400)->save(Storage::disk('public')->path($thumbPath));
+                // Ensure temp directory exists
+                if (!file_exists(dirname($tempThumbPath))) {
+                    mkdir(dirname($tempThumbPath), 0755, true);
+                }
+                
+                $image->cover(800, 400)->save($tempThumbPath);
+                
+                // Upload thumbnail to cloud storage
+                $thumbStream = fopen($tempThumbPath, 'r');
+                Storage::disk('public')->put($thumbPath, $thumbStream);
+                fclose($thumbStream);
+                
+                // Clean up temp file
+                unlink($tempThumbPath);
 
                 // Update the cover_image field in the database
                 $validated['cover_image'] = $originalPath;
@@ -337,12 +350,6 @@ class ItineraryController extends Controller
                     // Handle new meal photos
                     if (isset($request->file('itinerary_days')[$index]['meals'][$mealType]['photos'])) {
                         foreach ($request->file('itinerary_days')[$index]['meals'][$mealType]['photos'] as $photo) {
-                            // Create directories if they don't exist
-                            $mealPath = storage_path('app/public/meals/' . $day->id . '/' . $mealType);
-                            if (!file_exists($mealPath)) {
-                                mkdir($mealPath, 0755, true);
-                            }
-
                             // Create image instance
                             $image = $this->imageManager->read($photo);
                             
@@ -350,16 +357,35 @@ class ItineraryController extends Controller
                             $filename = uniqid() . '.' . $photo->getClientOriginalExtension();
                             $path = 'meals/' . $day->id . '/' . $mealType . '/' . $filename;
                             
-                            // Save original image
-                            $image->save(storage_path('app/public/' . $path));
+                            // Save original image using Laravel's store method
+                            $originalPath = $photo->store('meals/' . $day->id . '/' . $mealType, 'public');
                             
-                            // Create and save thumbnail
+                            if (!$originalPath) {
+                                throw new \Exception('Failed to store meal image');
+                            }
+                            
+                            // Create thumbnail using temporary file
+                            $tempThumbPath = storage_path('app/temp/thumb_' . $filename);
+                            
+                            // Ensure temp directory exists
+                            if (!file_exists(dirname($tempThumbPath))) {
+                                mkdir(dirname($tempThumbPath), 0755, true);
+                            }
+                            
+                            $image->cover(300, 300)->save($tempThumbPath);
+                            
+                            // Upload thumbnail to cloud storage
                             $thumbPath = 'meals/' . $day->id . '/' . $mealType . '/thumb_' . $filename;
-                            $image->cover(300, 300)->save(storage_path('app/public/' . $thumbPath));
+                            $thumbStream = fopen($tempThumbPath, 'r');
+                            Storage::disk('public')->put($thumbPath, $thumbStream);
+                            fclose($thumbStream);
+                            
+                            // Clean up temp file
+                            unlink($tempThumbPath);
                             
                             // Add new photo to existing photos
                             $meals[$mealType]['photos'][] = [
-                                'path' => $path,
+                                'path' => $originalPath,
                                 'thumb_path' => $thumbPath,
                                 'mime_type' => $photo->getMimeType()
                             ];
@@ -397,29 +423,41 @@ class ItineraryController extends Controller
                     // Handle new activity photos
                     if (isset($request->file('itinerary_days')[$index]['activities'][$activityIndex]['photos'])) {
                         foreach ($request->file('itinerary_days')[$index]['activities'][$activityIndex]['photos'] as $photo) {
-                            // Create directories if they don't exist
-                            $activityPath = storage_path('app/public/activities/' . $day->id . '/' . $activityIndex);
-                            if (!file_exists($activityPath)) {
-                                mkdir($activityPath, 0755, true);
-                            }
-
                             // Create image instance
                             $image = $this->imageManager->read($photo);
                             
                             // Generate unique filename
                             $filename = uniqid() . '.' . $photo->getClientOriginalExtension();
-                            $path = 'activities/' . $day->id . '/' . $activityIndex . '/' . $filename;
                             
-                            // Save original image
-                            $image->save(storage_path('app/public/' . $path));
+                            // Save original image using Laravel's store method
+                            $originalPath = $photo->store('activities/' . $day->id . '/' . $activityIndex, 'public');
                             
-                            // Create and save thumbnail
+                            if (!$originalPath) {
+                                throw new \Exception('Failed to store activity image');
+                            }
+                            
+                            // Create thumbnail using temporary file
+                            $tempThumbPath = storage_path('app/temp/thumb_' . $filename);
+                            
+                            // Ensure temp directory exists
+                            if (!file_exists(dirname($tempThumbPath))) {
+                                mkdir(dirname($tempThumbPath), 0755, true);
+                            }
+                            
+                            $image->cover(300, 300)->save($tempThumbPath);
+                            
+                            // Upload thumbnail to cloud storage
                             $thumbPath = 'activities/' . $day->id . '/' . $activityIndex . '/thumb_' . $filename;
-                            $image->cover(300, 300)->save(storage_path('app/public/' . $thumbPath));
+                            $thumbStream = fopen($tempThumbPath, 'r');
+                            Storage::disk('public')->put($thumbPath, $thumbStream);
+                            fclose($thumbStream);
+                            
+                            // Clean up temp file
+                            unlink($tempThumbPath);
                             
                             // Add new photo to existing photos
                             $activities[$activityIndex]['photos'][] = [
-                                'path' => $path,
+                                'path' => $originalPath,
                                 'thumb_path' => $thumbPath,
                                 'mime_type' => $photo->getMimeType()
                             ];
@@ -431,13 +469,12 @@ class ItineraryController extends Controller
             // Handle new receipts
             if (isset($request->file('itinerary_days')[$index]['receipts'])) {
                 foreach ($request->file('itinerary_days')[$index]['receipts'] as $receipt) {
-                    // Create directory if it doesn't exist
-                    $receiptPath = storage_path('app/public/receipts/' . $day->id);
-                    if (!file_exists($receiptPath)) {
-                        mkdir($receiptPath, 0755, true);
-                    }
-
                     $path = $receipt->store('receipts/' . $day->id, 'public');
+                    
+                    if (!$path) {
+                        throw new \Exception('Failed to store receipt');
+                    }
+                    
                     $receipts[] = [
                         'path' => $path,
                         'name' => $receipt->getClientOriginalName(),
@@ -560,7 +597,7 @@ class ItineraryController extends Controller
                 
                 $image->cover(800, 400)->save($tempThumbPath);
                 
-                // Upload thumbnail to storage
+                // Upload thumbnail to cloud storage
                 $thumbStream = fopen($tempThumbPath, 'r');
                 Storage::disk('public')->put($thumbPath, $thumbStream);
                 fclose($thumbStream);
@@ -887,7 +924,7 @@ class ItineraryController extends Controller
             
             $image->cover(800, 400)->save($tempThumbPath);
             
-            // Upload thumbnail to storage
+            // Upload thumbnail to cloud storage
             $thumbStream = fopen($tempThumbPath, 'r');
             Storage::disk('public')->put($thumbPath, $thumbStream);
             fclose($thumbStream);

@@ -94,23 +94,34 @@ class ProfileController extends Controller
             // Generate unique filename
             $filename = time() . '_' . $file->getClientOriginalName();
             
-            // Save original image
-            $originalPath = 'avatars/' . $filename;
+            // Save original image using Laravel's store method
+            $originalPath = $file->store('avatars', 'public');
             
-            // Ensure directory exists
-            Storage::disk('public')->makeDirectory(dirname($originalPath));
-            
-            // Save the image
-            $image->save(Storage::disk('public')->path($originalPath));
-            
-            // Create and save thumbnail
+            if (!$originalPath) {
+                throw new \Exception('Failed to store the original image');
+            }
+
+            // Create thumbnail using Intervention Image
+            $image = $this->imageManager->read($file);
             $thumbPath = 'avatars/thumbnails/' . $filename;
             
-            // Ensure thumbnail directory exists
-            Storage::disk('public')->makeDirectory(dirname($thumbPath));
+            // Save thumbnail to temporary file first, then upload to cloud storage
+            $tempThumbPath = storage_path('app/temp/' . $filename);
             
-            // Create and save the thumbnail
-            $image->cover(200, 200)->save(Storage::disk('public')->path($thumbPath));
+            // Ensure temp directory exists
+            if (!file_exists(dirname($tempThumbPath))) {
+                mkdir(dirname($tempThumbPath), 0755, true);
+            }
+            
+            $image->cover(200, 200)->save($tempThumbPath);
+            
+            // Upload thumbnail to cloud storage
+            $thumbStream = fopen($tempThumbPath, 'r');
+            Storage::disk('public')->put($thumbPath, $thumbStream);
+            fclose($thumbStream);
+            
+            // Clean up temp file
+            unlink($tempThumbPath);
 
             // Update the avatar field in the database
             $user->update(['avatar' => $originalPath]);
