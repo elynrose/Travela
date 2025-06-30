@@ -539,14 +539,25 @@ class ItineraryController extends Controller
             $filename = time() . '_' . $file->getClientOriginalName();
             
             try {
-                // Save new cover image
-                $path = $file->store('covers', 'public');
+                $image = $this->imageManager->read($file);
                 
-                if (!$path) {
-                    throw new \Exception('Failed to store the image file');
-                }
+                // Save original image
+                $originalPath = 'covers/' . $filename;
+                
+                // Ensure directory exists
+                Storage::disk('public')->makeDirectory(dirname($originalPath));
+                
+                $image->save(Storage::disk('public')->path($originalPath));
+                
+                // Create and save thumbnail
+                $thumbPath = 'covers/thumbnails/' . $filename;
+                
+                // Ensure thumbnail directory exists
+                Storage::disk('public')->makeDirectory(dirname($thumbPath));
+                
+                $image->cover(800, 400)->save(Storage::disk('public')->path($thumbPath));
 
-                $itinerary->cover_image = $path;
+                $itinerary->cover_image = $originalPath;
                 $itinerary->save();
             } catch (\Exception $e) {
                 throw new \Exception('Failed to save cover image: ' . $e->getMessage());
@@ -840,14 +851,41 @@ class ItineraryController extends Controller
             Storage::disk('public')->delete(str_replace('covers/', 'covers/thumbnails/', $itinerary->cover_image));
         }
 
-        $path = $request->file('cover_image')->store('covers', 'public');
-        $itinerary->cover_image = $path;
-        $itinerary->save();
+        $file = $request->file('cover_image');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        
+        try {
+            $image = $this->imageManager->read($file);
+            
+            // Save original image
+            $originalPath = 'covers/' . $filename;
+            
+            // Ensure directory exists
+            Storage::disk('public')->makeDirectory(dirname($originalPath));
+            
+            $image->save(Storage::disk('public')->path($originalPath));
+            
+            // Create and save thumbnail
+            $thumbPath = 'covers/thumbnails/' . $filename;
+            
+            // Ensure thumbnail directory exists
+            Storage::disk('public')->makeDirectory(dirname($thumbPath));
+            
+            $image->cover(800, 400)->save(Storage::disk('public')->path($thumbPath));
 
-        return response()->json([
-            'success' => true,
-            'cover_image_url' => Storage::url($path),
-            'message' => 'Cover image updated successfully'
-        ]);
+            $itinerary->cover_image = $originalPath;
+            $itinerary->save();
+
+            return response()->json([
+                'success' => true,
+                'cover_image_url' => Storage::url($originalPath),
+                'message' => 'Cover image updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload cover image: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
