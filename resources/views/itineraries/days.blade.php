@@ -684,6 +684,8 @@
                         const photoPath = this.dataset.photoPath;
                         const dayId = this.dataset.dayId;
                         
+                        console.log('Deleting photo:', photoPath, 'for day:', dayId);
+                        
                         fetch(`/itineraries/days/${dayId}/photos/${encodeURIComponent(photoPath)}`, {
                             method: 'DELETE',
                             headers: {
@@ -691,18 +693,22 @@
                                 'Accept': 'application/json'
                             }
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            return response.json();
+                        })
                         .then(data => {
+                            console.log('Response data:', data);
                             if (data.success) {
                                 // Remove the photo container from the DOM
                                 this.closest('.col-4').remove();
                             } else {
-                                alert('Failed to delete photo');
+                                alert('Failed to delete photo: ' + (data.message || 'Unknown error'));
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            alert('Failed to delete photo');
+                            alert('Failed to delete photo: ' + error.message);
                         });
                     }
                 });

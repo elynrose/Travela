@@ -374,8 +374,9 @@ class ItineraryController extends Controller
                             
                             $image->cover(300, 300)->save($tempThumbPath);
                             
-                            // Upload thumbnail to cloud storage
-                            $thumbPath = 'meals/' . $day->id . '/' . $mealType . '/thumb_' . $filename;
+                            // Upload thumbnail to cloud storage - use the same directory structure as original
+                            $pathInfo = pathinfo($originalPath);
+                            $thumbPath = $pathInfo['dirname'] . '/thumb_' . $pathInfo['basename'];
                             $thumbStream = fopen($tempThumbPath, 'r');
                             Storage::disk('public')->put($thumbPath, $thumbStream);
                             fclose($thumbStream);
@@ -446,8 +447,9 @@ class ItineraryController extends Controller
                             
                             $image->cover(300, 300)->save($tempThumbPath);
                             
-                            // Upload thumbnail to cloud storage
-                            $thumbPath = 'activities/' . $day->id . '/' . $activityIndex . '/thumb_' . $filename;
+                            // Upload thumbnail to cloud storage - use the same directory structure as original
+                            $pathInfo = pathinfo($originalPath);
+                            $thumbPath = $pathInfo['dirname'] . '/thumb_' . $pathInfo['basename'];
                             $thumbStream = fopen($tempThumbPath, 'r');
                             Storage::disk('public')->put($thumbPath, $thumbStream);
                             fclose($thumbStream);
@@ -514,51 +516,58 @@ class ItineraryController extends Controller
     {
         $this->authorize('update', $day->itinerary);
         
-        // Delete the file and its thumbnail from storage
-        Storage::disk('public')->delete($photoPath);
-        
-        // If it's an image, also delete the thumbnail
-        if (strpos($photoPath, 'thumb_') === false) {
-            $pathInfo = pathinfo($photoPath);
-            $thumbPath = $pathInfo['dirname'] . '/thumb_' . $pathInfo['basename'];
-            Storage::disk('public')->delete($thumbPath);
-        }
-        
-        // Update the day's data to remove the photo
-        $data = $day->toArray();
-        
-        // Check meals
-        if (isset($data['meals'])) {
-            foreach ($data['meals'] as $mealType => $meal) {
-                if (isset($meal['photos'])) {
-                    $data['meals'][$mealType]['photos'] = array_filter($meal['photos'], function($photo) use ($photoPath) {
-                        return $photo['path'] !== $photoPath;
-                    });
+        try {
+            // Decode the URL-encoded photo path
+            $photoPath = urldecode($photoPath);
+            
+            // Delete the file from storage
+            Storage::disk('public')->delete($photoPath);
+            
+            // If it's an image (not a receipt), also delete the thumbnail
+            if (strpos($photoPath, 'thumb_') === false && (strpos($photoPath, 'meals/') !== false || strpos($photoPath, 'activities/') !== false)) {
+                $pathInfo = pathinfo($photoPath);
+                $thumbPath = $pathInfo['dirname'] . '/thumb_' . $pathInfo['basename'];
+                Storage::disk('public')->delete($thumbPath);
+            }
+            
+            // Update the day's data to remove the photo
+            $data = $day->toArray();
+            
+            // Check meals
+            if (isset($data['meals'])) {
+                foreach ($data['meals'] as $mealType => $meal) {
+                    if (isset($meal['photos'])) {
+                        $data['meals'][$mealType]['photos'] = array_values(array_filter($meal['photos'], function($photo) use ($photoPath) {
+                            return $photo['path'] !== $photoPath;
+                        }));
+                    }
                 }
             }
-        }
-        
-        // Check activities
-        if (isset($data['activities'])) {
-            foreach ($data['activities'] as $index => $activity) {
-                if (isset($activity['photos'])) {
-                    $data['activities'][$index]['photos'] = array_filter($activity['photos'], function($photo) use ($photoPath) {
-                        return $photo['path'] !== $photoPath;
-                    });
+            
+            // Check activities
+            if (isset($data['activities'])) {
+                foreach ($data['activities'] as $index => $activity) {
+                    if (isset($activity['photos'])) {
+                        $data['activities'][$index]['photos'] = array_values(array_filter($activity['photos'], function($photo) use ($photoPath) {
+                            return $photo['path'] !== $photoPath;
+                        }));
+                    }
                 }
             }
+            
+            // Check receipts
+            if (isset($data['receipts'])) {
+                $data['receipts'] = array_values(array_filter($data['receipts'], function($receipt) use ($photoPath) {
+                    return $receipt['path'] !== $photoPath;
+                }));
+            }
+            
+            $day->update($data);
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-        
-        // Check receipts
-        if (isset($data['receipts'])) {
-            $data['receipts'] = array_filter($data['receipts'], function($receipt) use ($photoPath) {
-                return $receipt['path'] !== $photoPath;
-            });
-        }
-        
-        $day->update($data);
-        
-        return response()->json(['success' => true]);
     }
 
     /**
