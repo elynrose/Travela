@@ -94,12 +94,7 @@
                                             <img src="{{ $itinerary->getCoverThumbUrl() }}" 
                                                  alt="{{ $itinerary->title }}" 
                                                  class="rounded-3 me-3" 
-                                                 style="width: 48px; height: 48px; object-fit: cover;"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="rounded-3 bg-light me-3 d-flex align-items-center justify-content-center" 
-                                                 style="width: 48px; height: 48px; display: none;">
-                                                <i class="bi bi-image text-muted"></i>
-                                            </div>
+                                                 style="width: 48px; height: 48px; object-fit: cover;">
                                         @else
                                             <div class="rounded-3 bg-light me-3 d-flex align-items-center justify-content-center" 
                                                  style="width: 48px; height: 48px;">

@@ -28,7 +28,7 @@
                     <div class="card h-100 shadow-sm">
                         @if($itinerary->cover_image)
                             <a href="{{ route('itineraries.show', $itinerary) }}">
-                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                             </a>
                         @else
                             <a href="{{ route('itineraries.show', $itinerary) }}" class="d-block bg-light d-flex align-items-center justify-content-center" style="height: 200px;">

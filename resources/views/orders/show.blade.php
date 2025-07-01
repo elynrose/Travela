@@ -49,11 +49,7 @@
                                     <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
                                          alt="{{ $order->itinerary->title }}" 
                                          class="img-fluid rounded"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                         style="height: 200px; display: none;">
-                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                                    </div>
+                                         style="height: 200px; width: 100%; object-fit: cover;">
                                 @else
                                     <div class="bg-light rounded d-flex align-items-center justify-content-center" 
                                          style="height: 200px;">

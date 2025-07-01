@@ -335,12 +335,7 @@
                                   <img src="{{ Storage::url($image) }}" 
                                        alt="Gallery image" 
                                        class="img-thumbnail w-100" 
-                                       style="max-height: 150px; object-fit: cover;"
-                                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                  <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                       style="height: 100px; width: 100px; display: none;">
-                                      <i class="bi bi-image text-muted"></i>
-                                  </div>
+                                       style="max-height: 150px; object-fit: cover;">
                                   <button type="button" class="btn btn-sm btn-danger delete-gallery-image" data-image="{{ urlencode($image) }}" style="position: absolute; top: 8px; right: 8px;" title="Delete image">
                                     <i class="bi bi-trash"></i>
                                   </button>

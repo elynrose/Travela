@@ -75,10 +75,7 @@
                                 <label for="cover_image" class="block text-sm font-medium text-gray-700">Cover Image</label>
                                 @if(isset($itinerary) && $itinerary->cover_image)
                                     <div class="mt-2">
-                                        <img src="{{ Storage::url($itinerary->cover_image) }}" alt="Current cover image" class="h-32 w-32 object-cover rounded" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    </div>
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 128px; width: 128px; display: none;">
-                                        <i class="bi bi-image text-muted"></i>
+                                        <img src="{{ Storage::url($itinerary->cover_image) }}" alt="Current cover image" class="h-32 w-32 object-cover rounded">
                                     </div>
                                 @endif
                                 <input type="file" name="cover_image" id="cover_image" accept="image/*" {{ !isset($itinerary) ? 'required' : '' }} class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
@@ -158,10 +155,7 @@
                                                                     <label class="block text-sm font-medium text-gray-700">Image</label>
                                                                     @if($item->image)
                                                                         <div class="mt-2">
-                                                                            <img src="{{ Storage::url($item->image) }}" alt="Current item image" class="h-20 w-20 object-cover rounded" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                                        </div>
-                                                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px; width: 80px; display: none;">
-                                                                            <i class="bi bi-image text-muted"></i>
+                                                                            <img src="{{ Storage::url($item->image) }}" alt="Current item image" class="h-20 w-20 object-cover rounded">
                                                                         </div>
                                                                     @endif
                                                                     <input type="file" name="days[{{ $index }}][items][{{ $itemIndex }}][image]" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
