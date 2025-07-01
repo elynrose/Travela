@@ -51,16 +51,21 @@
                             <div class="row align-items-center">
                                 <!-- Order Image -->
                                 <div class="col-md-2">
-                                    @if($order->itinerary->cover_image)
-                                        <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
-                                             alt="{{ $order->itinerary->title }}" 
-                                             class="img-fluid rounded" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    @endif
+                                                                    @if($order->itinerary->cover_image)
+                                    <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
+                                         alt="{{ $order->itinerary->title }}" 
+                                         class="img-fluid rounded" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                         style="height: 100px; width: 100%; display: {{ $order->itinerary->cover_image ? 'none' : 'flex' }};">
+                                         style="height: 100px; width: 100%; display: none;">
                                         <i class="bi bi-image text-muted"></i>
                                     </div>
+                                @else
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                         style="height: 100px; width: 100%;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                @endif
                                 </div>
 
                                 <!-- Order Details -->

@@ -23,10 +23,14 @@
                             <a href="{{ route('itineraries.show', $itinerary) }}">
                                 <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             </a>
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%; display: none;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                        @else
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
                         @endif
-                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%; display: {{ $itinerary->cover_image ? 'none' : 'flex' }};">
-                            <i class="bi bi-image text-muted"></i>
-                        </div>
                         <span class="position-absolute top-0 end-0 m-3 badge bg-primary">
                             ${{ number_format($itinerary->price, 2) }}
                         </span>
