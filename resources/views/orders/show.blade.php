@@ -48,12 +48,13 @@
                                 @if($order->itinerary->cover_image)
                                     <img src="{{ Storage::url($order->itinerary->cover_image) }}" 
                                          alt="{{ $order->itinerary->title }}" 
-                                         class="img-fluid rounded">
-                                @else
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                                    </div>
+                                         class="img-fluid rounded"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 @endif
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="height: 200px; display: {{ $order->itinerary->cover_image ? 'none' : 'flex' }};">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-2">{{ $order->itinerary->title }}</h4>
