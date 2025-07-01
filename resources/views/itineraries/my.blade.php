@@ -8,6 +8,38 @@
         </div>
     </x-slot>
 
+    <style>
+        .image-fallback {
+            display: none !important;
+        }
+        .image-fallback.show {
+            display: flex !important;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle image loading errors
+            document.querySelectorAll('img').forEach(function(img) {
+                img.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    const fallback = this.parentElement.querySelector('.image-fallback');
+                    if (fallback) {
+                        fallback.classList.add('show');
+                    }
+                });
+                
+                // If image loads successfully, ensure fallback is hidden
+                img.addEventListener('load', function() {
+                    const fallback = this.parentElement.querySelector('.image-fallback');
+                    if (fallback) {
+                        fallback.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+
     @if(session('error'))
         <div class="alert alert-danger">
             {{ session('error') }}
@@ -21,15 +53,8 @@
                     <div class="position-relative">
                         @if($itinerary->cover_image)
                             <a href="{{ route('itineraries.show', $itinerary) }}">
-                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <img src="{{ Storage::url($itinerary->cover_image) }}" alt="{{ $itinerary->title }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                             </a>
-                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%; display: none;">
-                                <i class="bi bi-image text-muted"></i>
-                            </div>
-                        @else
-                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px; width: 100%;">
-                                <i class="bi bi-image text-muted"></i>
-                            </div>
                         @endif
                         <span class="position-absolute top-0 end-0 m-3 badge bg-primary">
                             ${{ number_format($itinerary->price, 2) }}
